@@ -4,8 +4,6 @@ import Home from "./Home/Home";
 import Login from "./Login/Login";
 import Register from "./Register/Register";
 import LoggedIn from "./LoggedIn/Loggedin";
-import ViewJobs from "./ViewJobs/ViewJobs";
-import MyApplications from "./MyApplications/MyApplications";
 
 const App = () => {
   return (
@@ -14,8 +12,6 @@ const App = () => {
       <Route exact path='/login' component={Login} />
       <Route exact path='/register' component={Register} />
       <Route path='/user' component={LoggedIn} />
-      <Route exact path='/viewJobs' component={ViewJobs} />
-      <Route exact path='/myApplications' component={MyApplications} />
     </Router>
   );
 };

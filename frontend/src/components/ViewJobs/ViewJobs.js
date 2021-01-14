@@ -11,26 +11,6 @@ import {
   DialogActions,
 } from "@material-ui/core";
 
-// const ViewJobs = () => {
-//   let jobs;
-//   axios.get("http://localhost:8080/jobs").then((response) => {
-//     console.log("requested");
-//     // displayJobs(response.data);
-//     jobs = response.data;
-//   });
-
-//   const printJobs = () => {
-//     return <h1>Jobs List</h1>;
-//   };
-
-//   return (
-//     <div>
-//       <h1>View Jobs</h1>
-//       {printJobs()}
-//     </div>
-//   );
-// };
-
 class ViewJobs extends React.Component {
   constructor(props) {
     super(props);
@@ -38,8 +18,8 @@ class ViewJobs extends React.Component {
     this.applyingToJob = "";
     this._isMounted = false;
     this.state = {
-      currUser: {},
-      currUserInfo: {},
+      currUser: props.user,
+      currUserInfo: props.userInfo,
       jobs: [],
       sortChoice: "salary",
       order: 1,
@@ -79,13 +59,23 @@ class ViewJobs extends React.Component {
       data: applytoJob,
     })
       .then((response) => {
-        if (response.data === "Success") alert("Applied");
-        else alert("Failed to Apply");
-        window.location.reload();
+        if (response.data === "Success") {
+          let jobsTemp = this.state.jobs;
+          let userInfoTemp = this.state.currUserInfo;
+          for (let i = 0; i < this.state.jobs.length; i++) {
+            if (jobsTemp[i]._id === jobId) {
+              jobsTemp[i].appliedBy.push({ id: userId, SOP: jobSOP });
+            }
+          }
+          userInfoTemp.appliedJobs.push(jobId);
+          this.setState({
+            jobs: jobsTemp,
+            currUserInfo: userInfoTemp,
+          });
+        } else alert("Failed to Apply");
       })
       .catch((err) => {
         alert("Failed to Apply");
-        window.location.reload();
       });
     if (this._isMounted) this.handleClose();
   }
@@ -93,26 +83,20 @@ class ViewJobs extends React.Component {
   componentDidMount() {
     this._isMounted = true;
     axios.defaults.withCredentials = true;
-    // axios
-    //   .get("http://localhost:8080/currUser")
-    //   .then((response) => {
-    //     let obj = response.data.currUser;
-    //     let objInfo = response.data.currUserInfo;
-    //     if (Object.entries(obj).length === 0) {
-    //       this.props.history.push("/login");
-    //     } else {
-    //       if (this._isMounted)
-    //         this.setState({
-    //           currUser: obj,
-    //           currUserInfo: objInfo,
-    //         });
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     this.props.history.push("/login");
-    //   });
-    if (Object.entries(this.state.currUser).length === 0)
-      axios.get("http://localhost:8080/jobs").then((response) => {
+    axios
+      .get("http://localhost:8080/isLoggedIn")
+      .then((response) => {
+        if (response.data !== "Yes") {
+          this.props.history.push("/login");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        this.props.history.push("/login");
+      });
+    axios
+      .get("http://localhost:8080/jobs")
+      .then((response) => {
         for (var i = 0; i < response.data.jobs.length; i++) {
           this.maxSalary = Math.max(
             this.maxSalary,
@@ -124,6 +108,10 @@ class ViewJobs extends React.Component {
             jobs: response.data.jobs,
             filterSalary: [0, this.maxSalary],
           });
+      })
+      .catch((err) => {
+        console.log(err);
+        this.props.history.push("/login");
       });
   }
 
@@ -218,10 +206,10 @@ class ViewJobs extends React.Component {
       );
     else {
       let returnButton = false;
-      job.appliedBy.forEach((user) => {
-        if (user.id === this.state.currUser._id) return (returnButton = true);
-        else return (returnButton = false);
-      });
+      for (let i = 0; i < job.appliedBy.length; i++) {
+        if (job.appliedBy[i].id === this.state.currUser._id)
+          returnButton = true;
+      }
       if (!returnButton)
         return (
           <Button
@@ -291,85 +279,90 @@ class ViewJobs extends React.Component {
   }
 
   render() {
-    return (
-      <div style={{ margin: 100 }}>
-        <h1>View Jobs</h1>
-        <TextField
-          style={{ margin: "20px" }}
-          name='sortChoice'
-          select
-          label='Sort By'
-          value={this.state.sortChoice}
-          onChange={this.handleChange}
-        >
-          <MenuItem key='salary' value='salary'>
-            Salary
-          </MenuItem>
-          <MenuItem key='rating' value='rating'>
-            Rating
-          </MenuItem>
-          <MenuItem key='duration' value='duration'>
-            Duration
-          </MenuItem>
-        </TextField>
-        <TextField
-          name='order'
-          select
-          label='Order'
-          value={this.state.order}
-          onChange={this.handleChange}
-        >
-          <MenuItem key='ascending' value='1'>
-            Ascending
-          </MenuItem>
-          <MenuItem key='descending' value='-1'>
-            Descending
-          </MenuItem>
-        </TextField>
-        <TextField
-          style={{ margin: "20px" }}
-          name='search'
-          lable='Search Jobs'
-          value={this.state.search}
-          onChange={this.handleChange}
-          autoComplete='off'
-        ></TextField>
-        {this.displayFilters()}
-        {this.displayJobs()}
-        <Dialog
-          open={this.state.openDialog}
-          onClose={this.handleClose}
-          aria-labelledby='form-dialog-title'
-        >
-          <DialogTitle id='form-dialog-title'>Statement of Purpose</DialogTitle>
-          <DialogContent>
-            <TextField
-              style={{ minWidth: 500 }}
-              autoFocus
-              rows={3}
-              rowsMax={6}
-              required
-              margin='dense'
-              id='sop'
-              label='max 250 words'
-              type='text'
-              inputProps={{ maxLength: 250 }}
-              multiline
-              variant='outlined'
-              fullWidth
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => this.handleClose()} color='primary'>
-              Cancel
-            </Button>
-            <Button onClick={() => this.sendApplication()} color='primary'>
-              Add
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </div>
-    );
+    if (Object.entries(this.state.currUser).length === 0)
+      return <h1>Loading...</h1>;
+    else
+      return (
+        <div style={{ margin: 100 }}>
+          <h1>View Jobs</h1>
+          <TextField
+            style={{ margin: "20px" }}
+            name='sortChoice'
+            select
+            label='Sort By'
+            value={this.state.sortChoice}
+            onChange={this.handleChange}
+          >
+            <MenuItem key='salary' value='salary'>
+              Salary
+            </MenuItem>
+            <MenuItem key='rating' value='rating'>
+              Rating
+            </MenuItem>
+            <MenuItem key='duration' value='duration'>
+              Duration
+            </MenuItem>
+          </TextField>
+          <TextField
+            name='order'
+            select
+            label='Order'
+            value={this.state.order}
+            onChange={this.handleChange}
+          >
+            <MenuItem key='ascending' value='1'>
+              Ascending
+            </MenuItem>
+            <MenuItem key='descending' value='-1'>
+              Descending
+            </MenuItem>
+          </TextField>
+          <TextField
+            style={{ margin: "20px" }}
+            name='search'
+            lable='Search Jobs'
+            value={this.state.search}
+            onChange={this.handleChange}
+            autoComplete='off'
+          ></TextField>
+          {this.displayFilters()}
+          {this.displayJobs()}
+          <Dialog
+            open={this.state.openDialog}
+            onClose={this.handleClose}
+            aria-labelledby='form-dialog-title'
+          >
+            <DialogTitle id='form-dialog-title'>
+              Statement of Purpose
+            </DialogTitle>
+            <DialogContent>
+              <TextField
+                style={{ minWidth: 500 }}
+                autoFocus
+                rows={3}
+                rowsMax={6}
+                required
+                margin='dense'
+                id='sop'
+                label='max 250 words'
+                type='text'
+                inputProps={{ maxLength: 250 }}
+                multiline
+                variant='outlined'
+                fullWidth
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => this.handleClose()} color='primary'>
+                Cancel
+              </Button>
+              <Button onClick={() => this.sendApplication()} color='primary'>
+                Add
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </div>
+      );
   }
 }
 
