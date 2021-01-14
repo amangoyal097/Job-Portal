@@ -158,10 +158,12 @@ app.post("/updateUserInfo", (req, res) => {
     .then((foundUser) => res.send("OK"))
     .catch((err) => console.log(err));
 });
+
 app.post("/getFile", (req, res) => {
   if (typeof req.user === "undefined") res.sendStatus(400).send("Bad Request");
   else res.download(__dirname + "/uploads/" + req.user._id + req.body.filename);
 });
+
 app.post("/storeFile", function (req, res) {
   if (req.files) {
     var file = req.files.file;
@@ -192,6 +194,7 @@ app.post("/storeFile", function (req, res) {
     });
   }
 });
+
 app.post("/register", function (req, res) {
   User.register(
     { username: req.body.username, type: req.body.profileType },
@@ -247,6 +250,7 @@ app.post("/applyToJob", (req, res) => {
   const userApplied = {
     id: req.body.userId,
     SOP: req.body.jobSOP,
+    status: "Applied",
   };
   const appliedTo = req.body.jobId;
   Job.findByIdAndUpdate(
@@ -274,6 +278,20 @@ app.post("/applyToJob", (req, res) => {
     }
   );
   res.send(sendMsg);
+});
+
+app.post("/addJob", async (req, res) => {
+  if (!req.isAuthenticated()) res.send("Not logged In");
+  else {
+    try {
+      const newJob = new Job(req.body);
+      let user = await newJob.save();
+      res.send("Success");
+    } catch (err) {
+      console.log(err);
+      res.sendStatus(400).send(err);
+    }
+  }
 });
 
 app.listen(8080, function () {

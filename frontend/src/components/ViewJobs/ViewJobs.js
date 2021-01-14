@@ -242,6 +242,7 @@ class ViewJobs extends React.Component {
     );
     const [minSal, maxSal] = this.state.filterSalary;
     return this.state.jobs
+      .filter((job) => new Date(job.deadlineDate) >= new Date())
       .filter((job) => job.title.includes(this.state.search))
       .filter((job) => job.duration < this.state.filterDuration)
       .filter((job) => job.salary <= maxSal && job.salary >= minSal)
@@ -279,8 +280,7 @@ class ViewJobs extends React.Component {
   }
 
   render() {
-    if (Object.entries(this.state.currUser).length === 0)
-      return <h1>Loading...</h1>;
+    if (this.state.jobs.length === 0) return <h1>Loading...</h1>;
     else
       return (
         <div style={{ margin: 100 }}>

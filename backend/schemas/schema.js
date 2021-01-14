@@ -48,12 +48,12 @@ const jobSchema = new mongoose.Schema({
   numPos: Number,
   postingDate: Date,
   deadlineDate: Date,
-  reqSkills: [String],
+  reqSkills: { type: [{ skillName: String }], default: [] },
   jobType: String,
   duration: Number,
   salary: Number,
   rating: { type: Number, default: 0 },
-  appliedBy: [{ id: String, SOP: String }],
+  appliedBy: [{ id: String, SOP: String, status: String }],
   gotBy: [String],
 });
 
