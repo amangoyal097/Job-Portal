@@ -8,7 +8,7 @@ const ShowSkills = (props) => {
       label={props.data}
       clickable
       color='primary'
-      style={{ width: 100, fontSize: 15 }}
+      style={{ fontSize: 15, margin: "0.3rem", padding: "0.5rem" }}
       onDelete={() => props.deleteSkill(props.data)}
       deleteIcon={<CloseIcon />}
     />

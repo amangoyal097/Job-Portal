@@ -1,20 +1,44 @@
+import "../../fonts/Fonts.css";
 import React, { useState } from "react";
 import NavBar from "../NavBar/NavBar";
 import axios from "axios";
 import { makeStyles } from "@material-ui/core/styles";
+import { FaGoogle } from "react-icons/fa";
+
 import {
   Box,
   Grid,
   TextField,
-  Paper,
+  FormControlLabel,
+  RadioGroup,
+  Radio,
   Container,
-  MenuItem,
+  FormControl,
+  FormHelperText,
   Button,
 } from "@material-ui/core/";
 const useStyles = makeStyles((theme) => ({
   root: {
     height: "100%",
-    backgroundColor: "#222831",
+    // backgroundImage: "linear-gradient(315deg, #fbb034 0%, #ffdd00 74%)",
+    backgroundColor: "white",
+  },
+  container: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  field: {
+    textAlign: "center",
+  },
+  input: {
+    marginTop: "0.5rem",
+    marginBottom: "1rem",
+    width: "100%",
+    margin: "auto",
+  },
+  heading: {
+    fontSize: "2.5rem",
+    fontFamily: "'Baloo Thambi 2', cursive ",
   },
 }));
 
@@ -25,6 +49,12 @@ const Register = (props) => {
     username: "",
     password: "",
   });
+  const [areFieldsEmpty, setFields] = useState({
+    profileType: false,
+    username: false,
+    password: false,
+  });
+  const [passwordError, setPasswordError] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -36,15 +66,34 @@ const Register = (props) => {
     });
   }
 
+  function googleSignUp() {
+    setFields((prevValues) => {
+      return {
+        ...prevValues,
+        profileType: profileInfo.profileType === "" ? true : false,
+      };
+    });
+    if (profileInfo.profileType === "") return;
+    // window.location.href = "http://localhost:8080/auth/google";
+    let path = "http://localhost:8080/registerType/" + profileInfo.profileType;
+    window.location.href = path;
+  }
+
   function addUser() {
+    setFields((prevValues) => {
+      return {
+        username: profileInfo.username === "" ? true : false,
+        password: profileInfo.password === "" ? true : false,
+        profileType: profileInfo.profileType === "" ? true : false,
+      };
+    });
     if (
       profileInfo.username === "" ||
       profileInfo.password === "" ||
-      profileInfo.profileType === ""
-    ) {
-      alert("Required fields are empty");
+      profileInfo.profileType === "" ||
+      passwordError
+    )
       return;
-    }
     axios({
       method: "post",
       url: "http://localhost:8080/register",
@@ -53,7 +102,7 @@ const Register = (props) => {
     })
       .then((response) => {
         if (response.data === "Success") {
-          props.history.push("/user");
+          props.history.push("/registerInfo");
         } else {
           alert("Failed to register");
           console.log(response.data);
@@ -80,55 +129,120 @@ const Register = (props) => {
     return (
       <Box className={classes.root}>
         <NavBar />
-        <h1>Register Page!</h1>
-        <Container>
-          <Paper className={classes.paper}>
-            <form noValidate autoComplete='off'>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    name='profileType'
-                    select
-                    label='Type'
-                    value={profileInfo.profileType}
-                    onChange={handleChange}
-                    helperText='Please select your type'
-                  >
-                    <MenuItem key='JobApplicant' value='JA'>
-                      Job Applicant
-                    </MenuItem>
-                    <MenuItem key='Recruiter' value='R'>
-                      Recruiter
-                    </MenuItem>
-                  </TextField>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    name='username'
-                    label='username'
-                    value={profileInfo.username}
-                    onChange={handleChange}
-                    helperText='Please Enter username'
-                    required
-                  ></TextField>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    name='password'
-                    label='Password'
-                    value={profileInfo.password}
-                    type='password'
-                    onChange={handleChange}
-                    helperText='Please Enter Password'
-                    required
-                  ></TextField>
-                </Grid>
-                <Button variant='contained' color='primary' onClick={addUser}>
-                  Submit
-                </Button>
-              </Grid>
-            </form>
-          </Paper>
+
+        <Container
+          maxwidth='xs'
+          style={{
+            width: 500,
+            maxWidth: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingTop: "10%",
+          }}
+        >
+          <Grid container className={classes.container}>
+            <h1 className={classes.heading}>Register</h1>
+            <Grid item xs={12} className={classes.field}>
+              <FormControl
+                error={areFieldsEmpty.profileType}
+                style={{ alignItems: "center" }}
+              >
+                <RadioGroup
+                  row
+                  style={{ justifyContent: "center" }}
+                  name='profileType'
+                  value={profileInfo.profileType}
+                  onChange={handleChange}
+                >
+                  <FormControlLabel
+                    value='JA'
+                    control={<Radio />}
+                    label='Job Applicant'
+                  />
+                  <FormControlLabel
+                    value='R'
+                    control={<Radio />}
+                    label='Recruiter'
+                  />
+                </RadioGroup>
+                {areFieldsEmpty.profileType ? (
+                  <FormHelperText>Please Select Type</FormHelperText>
+                ) : null}
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} className={classes.field}>
+              <TextField
+                error={areFieldsEmpty.username}
+                inputProps={{
+                  autoComplete: "new-password",
+                }}
+                className={classes.input}
+                name='username'
+                label='Username'
+                value={profileInfo.username}
+                onChange={handleChange}
+                helperText='Please Enter username'
+              ></TextField>
+            </Grid>
+            <Grid item xs={12} className={classes.field}>
+              <TextField
+                error={areFieldsEmpty.password}
+                className={classes.input}
+                name='password'
+                label='Password'
+                value={profileInfo.password}
+                type='password'
+                onChange={handleChange}
+                helperText='Please Enter Password'
+              ></TextField>
+            </Grid>
+            <Grid item xs={12} className={classes.field}>
+              <TextField
+                error={passwordError}
+                className={classes.input}
+                label='Confrim Password'
+                type='password'
+                onChange={(e) =>
+                  setPasswordError(e.target.value !== profileInfo.password)
+                }
+                helperText={passwordError ? "Passwords don't match" : null}
+              ></TextField>
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                variant='contained'
+                color='primary'
+                fullWidth
+                onClick={addUser}
+                style={{
+                  paddingTop: "1rem",
+                  paddingBottom: "1rem",
+                  margin: "20px 0px 20px 0px",
+                }}
+              >
+                Submit
+              </Button>
+
+              <Button
+                onClick={googleSignUp}
+                style={{
+                  width: "100%",
+                  paddingTop: "1rem",
+                  paddingBottom: "1rem",
+                  background: "#f14233",
+                  color: "white",
+                }}
+              >
+                <FaGoogle
+                  style={{
+                    fontSize: "1.5rem",
+                    paddingRight: "1rem",
+                  }}
+                />
+                Sign In With Google
+              </Button>
+            </Grid>
+          </Grid>
         </Container>
       </Box>
     );

@@ -1,14 +1,15 @@
 const mongoose = require("mongoose");
 const passportLocalMongoose = require("passport-local-mongoose");
+const findOrCreate = require("mongoose-findorcreate");
 
 const userSchema = new mongoose.Schema({
   username: String,
   password: String,
-  // googleId: String,
+  googleId: String,
   type: String,
 });
 userSchema.plugin(passportLocalMongoose);
-// userSchema.plugin(findOrCreate);
+userSchema.plugin(findOrCreate);
 
 const jaSchema = new mongoose.Schema({
   userId: String,
@@ -29,6 +30,7 @@ const jaSchema = new mongoose.Schema({
   resumePath: { type: String, default: "" },
   ImagePath: { type: String, default: "" },
   appliedJobs: [String],
+  foundJob: { type: Boolean, default: false },
 });
 
 const rSchema = new mongoose.Schema({
@@ -52,8 +54,16 @@ const jobSchema = new mongoose.Schema({
   jobType: String,
   duration: Number,
   salary: Number,
-  rating: { type: Number, default: 0 },
-  appliedBy: [{ id: String, SOP: String, status: String }],
+  appliedBy: [
+    {
+      id: String,
+      SOP: String,
+      status: String,
+      dateOfApplication: Date,
+      dateOfJoining: Date,
+      rating: { type: Number, default: 0 },
+    },
+  ],
   gotBy: [String],
 });
 

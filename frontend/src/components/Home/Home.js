@@ -1,12 +1,23 @@
+import "../../fonts/Fonts.css";
 import React from "react";
 import NavBar from "../NavBar/NavBar";
 import { makeStyles } from "@material-ui/core/styles";
-import { Box } from "@material-ui/core/";
+import { Box, Grid } from "@material-ui/core/";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     height: "100%",
-    backgroundColor: "#222831",
+    backgroundImage: "white",
+  },
+  text: {
+    fontFamily: "'Baloo Thambi 2', cursive",
+    fontSize: "4rem",
+    textAlign: "center",
+  },
+  mainText: {
+    fontFamily: "Roboto",
+    fontSize: "7rem",
+    textAlign: "center",
   },
 }));
 
@@ -15,7 +26,19 @@ const Home = () => {
   return (
     <Box className={classes.root}>
       <NavBar />
-      <h1>Get your Dream Job Here!</h1>
+      <Grid
+        container
+        justify='center'
+        style={{
+          height: "100%",
+        }}
+        alignItems='center'
+      >
+        <Grid item>
+          <div className={classes.mainText}>Job Dekho</div>
+          <div className={classes.text}>Find & Post Jobs</div>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

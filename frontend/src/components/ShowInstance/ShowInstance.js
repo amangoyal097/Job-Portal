@@ -1,24 +1,41 @@
 import React from "react";
-import { Paper, Grid, IconButton } from "@material-ui/core";
+import {
+  ListItem,
+  ListItemAvatar,
+  Avatar,
+  ListItemText,
+  IconButton,
+} from "@material-ui/core";
 import DeleteIcon from "@material-ui/icons/Delete";
+import { FaGraduationCap } from "react-icons/fa";
 const ShowInstance = (props) => {
+  const educationLength = () => {
+    let str =
+      props.data.startYear +
+      " - " +
+      (props.data.endYear === 0 ? "Present" : props.data.endYear);
+    return str;
+  };
+
   return (
-    <Paper style={{ width: 200 }}>
-      <Grid container>
-        <Grid item>{props.data.instituteName}</Grid>
-      </Grid>
-      <Grid>
-        <Grid item xs={6} sm={6}>
-          {props.data.startYear}-
-          {props.data.endYear === 0 ? "Present" : props.data.endYear}
-        </Grid>
-        <Grid item xs={6} sm={6}>
-          <IconButton onClick={() => props.deleteEdu(props.data)}>
-            <DeleteIcon />
-          </IconButton>
-        </Grid>
-      </Grid>
-    </Paper>
+    <ListItem>
+      <ListItemAvatar>
+        <Avatar style={{ background: "#3f51b5" }}>
+          <FaGraduationCap />
+        </Avatar>
+      </ListItemAvatar>
+      <ListItemText
+        primary={props.data.instituteName}
+        secondary={educationLength()}
+      />
+      <IconButton
+        onClick={() => props.deleteEdu(props.data)}
+        edge='end'
+        aria-label='delete'
+      >
+        <DeleteIcon />
+      </IconButton>
+    </ListItem>
   );
 };
 

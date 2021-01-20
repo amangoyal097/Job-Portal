@@ -1,19 +1,32 @@
+import "../../fonts/Fonts.css";
 import React, { useState } from "react";
 import NavBar from "../NavBar/NavBar";
 import axios from "axios";
 import { makeStyles } from "@material-ui/core/styles";
-import {
-  Box,
-  Grid,
-  TextField,
-  Paper,
-  Container,
-  Button,
-} from "@material-ui/core/";
+import { FaGoogle } from "react-icons/fa";
+
+import { Box, Grid, TextField, Container, Button } from "@material-ui/core/";
 const useStyles = makeStyles((theme) => ({
   root: {
     height: "100%",
-    backgroundColor: "#222831",
+    backgroundImage: "white",
+  },
+  container: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  field: {
+    textAlign: "center",
+  },
+  input: {
+    marginTop: "0.5rem",
+    marginBottom: "1rem",
+    width: "100%",
+    margin: "auto",
+  },
+  heading: {
+    fontSize: "2.5rem",
+    fontFamily: "'Baloo Thambi 2', cursive ",
   },
 }));
 
@@ -24,6 +37,8 @@ const Login = (props) => {
     password: "",
   });
   const [gotResponse, setGotResponse] = useState(false);
+  const [isUserEmpty, setUserEmpty] = useState(false);
+  const [isPassEmpty, setPassEmpty] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -34,11 +49,17 @@ const Login = (props) => {
       };
     });
   }
+
+  function googleSignIn() {
+    window.location.href = "http://localhost:8080/auth/google";
+  }
+
   function addUser() {
-    if (loginInfo.username === "" || loginInfo.password === "") {
-      alert("Required fields are empty");
-      return;
-    }
+    if (loginInfo.username === "") setUserEmpty(true);
+    else setUserEmpty(false);
+    if (loginInfo.password === "") setPassEmpty(true);
+    else setPassEmpty(false);
+    if (loginInfo.username === "" || loginInfo.password === "") return;
     axios({
       method: "post",
       url: "http://localhost:8080/login",
@@ -72,38 +93,80 @@ const Login = (props) => {
     return (
       <Box className={classes.root}>
         <NavBar />
-        <h1>Login Page!</h1>
-        <Container>
-          <Paper className={classes.paper}>
-            <form autoComplete='off' noValidate>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    name='username'
-                    label='username'
-                    value={loginInfo.username}
-                    onChange={handleChange}
-                    helperText='Please Enter username'
-                    required
-                  ></TextField>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    name='password'
-                    label='Password'
-                    value={loginInfo.password}
-                    type='password'
-                    onChange={handleChange}
-                    helperText='Please Enter Password'
-                    required
-                  ></TextField>
-                </Grid>
-                <Button variant='contained' color='primary' onClick={addUser}>
-                  Submit
-                </Button>
-              </Grid>
-            </form>
-          </Paper>
+        <Container
+          maxwidth='xs'
+          style={{
+            height: "100%",
+            width: 500,
+            maxWidth: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingTop: "10%",
+          }}
+        >
+          <Grid container className={classes.container}>
+            <h1 className={classes.heading}>Login</h1>
+            <Grid item xs={12} className={classes.field}>
+              <TextField
+                error={isUserEmpty}
+                inputProps={{
+                  autoComplete: "new-password",
+                }}
+                className={classes.input}
+                name='username'
+                label='Username'
+                value={loginInfo.username}
+                onChange={handleChange}
+                helperText='Please Enter username'
+              ></TextField>
+            </Grid>
+            <Grid item xs={12} className={classes.field}>
+              <TextField
+                error={isPassEmpty}
+                className={classes.input}
+                name='password'
+                label='Password'
+                value={loginInfo.password}
+                type='password'
+                onChange={handleChange}
+                helperText='Please Enter Password'
+              ></TextField>
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                variant='contained'
+                color='primary'
+                fullWidth
+                onClick={addUser}
+                style={{
+                  paddingTop: "1rem",
+                  paddingBottom: "1rem",
+                  margin: "20px 0px 20px 0px",
+                }}
+              >
+                Submit
+              </Button>
+
+              <Button
+                onClick={googleSignIn}
+                style={{
+                  width: "100%",
+                  paddingTop: "1rem",
+                  paddingBottom: "1rem",
+                  background: "#f14233",
+                  color: "white",
+                }}
+              >
+                <FaGoogle
+                  style={{
+                    fontSize: "1.5rem",
+                    paddingRight: "1rem",
+                  }}
+                />
+                Sign In With Google
+              </Button>
+            </Grid>
+          </Grid>
         </Container>
       </Box>
     );

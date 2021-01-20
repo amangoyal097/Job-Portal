@@ -1,5 +1,6 @@
 import React from "react";
 import axios from "axios";
+import Application from "../Application/Application";
 
 class MyApplications extends React.Component {
   constructor(props) {
@@ -38,12 +39,11 @@ class MyApplications extends React.Component {
     // Date of joining?
     return this.state.applications.map((application) => {
       return (
-        <div key={application._id}>
-          <p>
-            {application.title} {application.duration} {application.salary}{" "}
-            {application.recruiterName}{" "}
-          </p>
-        </div>
+        <Application
+          key={application._id}
+          application={application}
+          userId={this.props.userId}
+        />
       );
     });
   }

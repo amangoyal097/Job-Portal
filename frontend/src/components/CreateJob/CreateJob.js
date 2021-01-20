@@ -19,7 +19,7 @@ import {
 } from "@material-ui/pickers";
 
 const CreateJob = (props) => {
-  const [jobInfo, setJobInfo] = useState({
+  const initializeJob = {
     title: "",
     recruiterName: props.userInfo.name,
     recruiterEmail: props.userInfo.email,
@@ -34,7 +34,9 @@ const CreateJob = (props) => {
     rating: 0,
     appliedBy: [],
     gotBy: [],
-  });
+  };
+
+  const [jobInfo, setJobInfo] = useState(initializeJob);
   const [chosenSkill, setChosenSkill] = useState("");
   const [skillOpen, setSkillOpen] = useState(false);
   const [skillInfo, setSkillInfo] = useState("");
@@ -67,17 +69,20 @@ const CreateJob = (props) => {
   const addJob = () => {
     axios.defaults.withCredentials = true;
     axios
-      .post("http://localhost:8080/addJob", jobInfo)
+      .post("http://localhost:8080/addJob", {
+        ...jobInfo,
+        id: props.userInfo.id,
+      })
       .then((response) => {
-        if (response.data === "Success") alert("Job added");
-        else {
-          alert("Failed to add job");
-          console.log(response.data);
-        }
+        alert("Job added");
+        setJobInfo(initializeJob);
+        props.addJobToInfo(response.data);
+        setChosenSkill("");
       })
       .catch((err) => {
         console.log(err);
         alert("Failed to add JOB");
+        if (err.response.status === 401) props.history.push("/login");
       });
   };
 
@@ -245,13 +250,13 @@ const CreateJob = (props) => {
       <TextField
         name='recruiterName'
         label='Name of Recruiter'
-        value={jobInfo.name}
+        value={jobInfo.recruiterName}
         onChange={handleChange}
       ></TextField>
       <TextField
         name='recruiterEmail'
         label='Email of Recruiter'
-        value={jobInfo.email}
+        value={jobInfo.recruiterEmail}
         onChange={handleChange}
       ></TextField>
       <TextField
@@ -268,13 +273,13 @@ const CreateJob = (props) => {
       ></TextField>
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
         <KeyboardDateTimePicker
-          label='With keyboard'
+          label='Deadline Date'
           value={jobInfo.deadlineDate}
           onChange={(date) => {
             setJobInfo((prevValues) => {
               return {
                 ...prevValues,
-                deadlineDate: date,
+                deadlineDate: date.toISOString(),
               };
             });
           }}

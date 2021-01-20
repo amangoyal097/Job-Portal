@@ -24,7 +24,10 @@ const ShowInfoR = (props) => {
         userInfo,
         type: props.userType,
       })
-      .then((response) => alert("Updated information"))
+      .then((response) => {
+        alert("Updated information");
+        props.updateUserInfo(userInfo);
+      })
       .catch((err) => {
         console.log(err);
         alert("Couldnt update");

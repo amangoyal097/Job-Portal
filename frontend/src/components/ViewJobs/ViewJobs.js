@@ -1,5 +1,7 @@
 import React from "react";
 import axios from "axios";
+import Fuse from "fuse.js";
+import SearchIcon from "@material-ui/icons/Search";
 import {
   TextField,
   MenuItem,
@@ -9,7 +11,23 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  InputAdornment,
+  Container,
+  Paper,
+  Grid,
 } from "@material-ui/core";
+const classes = {
+  heading: {
+    fontSize: "3rem",
+    fontFamily: "'Work Sans', sans-serif",
+    // fontWeight: 400,
+    color: "#002147",
+  },
+  field: {
+    margin: "1rem 0rem",
+  },
+  sfheading: {},
+};
 
 class ViewJobs extends React.Component {
   constructor(props) {
@@ -72,10 +90,13 @@ class ViewJobs extends React.Component {
             jobs: jobsTemp,
             currUserInfo: userInfoTemp,
           });
-        } else alert("Failed to Apply");
+        } else {
+          alert("Failed to Apply");
+          console.log(response.data);
+        }
       })
       .catch((err) => {
-        alert("Failed to Apply");
+        console.log(err);
       });
     if (this._isMounted) this.handleClose();
   }
@@ -144,28 +165,32 @@ class ViewJobs extends React.Component {
     }
 
     return (
-      <div>
-        <TextField
-          style={{ margin: "20px" }}
-          name='filterDuration'
-          select
-          label='Duration'
-          value={this.state.filterDuration}
-          onChange={this.handleChange}
-        >
-          {durationFilters}
-        </TextField>
-        <TextField
-          style={{ margin: "20px" }}
-          name='filterType'
-          select
-          label='Type'
-          value={this.state.filterType}
-          onChange={this.handleChange}
-        >
-          {typeFilters}
-        </TextField>
-        <div style={{ width: 300 }}>
+      <Grid container>
+        <Grid item xs={12} style={classes.field}>
+          <TextField
+            fullWidth
+            name='filterDuration'
+            select
+            label='Duration'
+            value={this.state.filterDuration}
+            onChange={this.handleChange}
+          >
+            {durationFilters}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} style={classes.field}>
+          <TextField
+            fullWidth
+            name='filterType'
+            select
+            label='Type'
+            value={this.state.filterType}
+            onChange={this.handleChange}
+          >
+            {typeFilters}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} style={classes.field}>
           <Slider
             value={this.state.filterSalary}
             onChange={this.handleSlider}
@@ -177,8 +202,8 @@ class ViewJobs extends React.Component {
           <h1>
             {this.state.filterSalary[0]}-{this.state.filterSalary[1]}
           </h1>
-        </div>
-      </div>
+        </Grid>
+      </Grid>
     );
   }
 
@@ -194,23 +219,25 @@ class ViewJobs extends React.Component {
   }
 
   canApply(job, jobId) {
-    if (job.appliedBy.length === job.maxApp || job.gotBy.length === job.numPos)
-      return (
-        <Button
-          variant='contained'
-          style={{ backgroundColor: "#3f50b5", color: "white" }}
-          disabled
-        >
-          Full
-        </Button>
-      );
-    else {
-      let returnButton = false;
-      for (let i = 0; i < job.appliedBy.length; i++) {
-        if (job.appliedBy[i].id === this.state.currUser._id)
-          returnButton = true;
-      }
-      if (!returnButton)
+    let returnButton = false;
+    for (let i = 0; i < job.appliedBy.length; i++) {
+      if (job.appliedBy[i].id === this.state.currUser._id) returnButton = true;
+    }
+    if (!returnButton)
+      if (
+        job.appliedBy.length === job.maxApp ||
+        job.gotBy.length === job.numPos
+      )
+        return (
+          <Button
+            variant='contained'
+            style={{ backgroundColor: "#3f50b5", color: "white" }}
+            disabled
+          >
+            Full
+          </Button>
+        );
+      else
         return (
           <Button
             color='secondary'
@@ -221,16 +248,16 @@ class ViewJobs extends React.Component {
             Apply
           </Button>
         );
-      else
-        return (
-          <Button
-            disabled
-            variant='contained'
-            style={{ backgroundColor: "#0bda51", color: "white" }}
-          >
-            Applied
-          </Button>
-        );
+    else {
+      return (
+        <Button
+          disabled
+          variant='contained'
+          style={{ backgroundColor: "#0bda51", color: "white" }}
+        >
+          Applied
+        </Button>
+      );
     }
   }
 
@@ -240,10 +267,25 @@ class ViewJobs extends React.Component {
         (a[this.state.sortChoice] - b[this.state.sortChoice]) *
         parseInt(this.state.order)
     );
+    const options = {
+      shouldSort: false,
+      useExtendedSearch: true,
+      keys: ["title"],
+    };
+
+    const fuse = new Fuse(this.state.jobs, options);
+    let final =
+      this.state.search === ""
+        ? this.state.jobs
+        : fuse.search(this.state.search);
+    const finalJobs = [];
+    if (this.state.search !== "") {
+      final.forEach((job) => finalJobs.push(job.item));
+      final = finalJobs;
+    }
     const [minSal, maxSal] = this.state.filterSalary;
-    return this.state.jobs
+    return final
       .filter((job) => new Date(job.deadlineDate) >= new Date())
-      .filter((job) => job.title.includes(this.state.search))
       .filter((job) => job.duration < this.state.filterDuration)
       .filter((job) => job.salary <= maxSal && job.salary >= minSal)
       .filter((job) =>
@@ -252,11 +294,16 @@ class ViewJobs extends React.Component {
           : job.jobType === this.state.filterType
       )
       .map((job) => {
+        let rating = 0;
+        job.appliedBy.forEach((applicant) => {
+          if (applicant.status === "Accepted") rating += applicant.rating;
+        });
+        if (job.gotBy.length !== 0) rating = rating / job.gotBy.length;
         return (
           <div key={job._id}>
             <p key={job._id}>
               title: {job.title} RName: {job.recruiterName} salary: {job.salary}{" "}
-              rating: {job.rating} duration: {job.duration} deadline:{" "}
+              rating: {rating} duration: {job.duration} deadline:{" "}
               {job.deadlineDate}
             </p>
             {this.canApply(job, job._id)}
@@ -279,89 +326,178 @@ class ViewJobs extends React.Component {
       });
   }
 
+  // render() {
+  //   if (this.state.jobs.length === 0)
+  //     return <h1 style={classes.heading}>Loading...</h1>;
+  //   else
+  //     return (
+  //       <Container>
+  //         <h1 style={classes.heading}>View Jobs</h1>
+  //         <Paper>
+  //           <TextField
+  //             style={{ margin: "20px" }}
+  //             name='sortChoice'
+  //             select
+  //             label='Sort By'
+  //             value={this.state.sortChoice}
+  //             onChange={this.handleChange}
+  //           >
+  //             <MenuItem key='salary' value='salary'>
+  //               Salary
+  //             </MenuItem>
+  //             <MenuItem key='rating' value='rating'>
+  //               Rating
+  //             </MenuItem>
+  //             <MenuItem key='duration' value='duration'>
+  //               Duration
+  //             </MenuItem>
+  //           </TextField>
+  //           <TextField
+  //             name='order'
+  //             select
+  //             label='Order'
+  //             value={this.state.order}
+  //             onChange={this.handleChange}
+  //           >
+  //             <MenuItem key='ascending' value='1'>
+  //               Ascending
+  //             </MenuItem>
+  //             <MenuItem key='descending' value='-1'>
+  //               Descending
+  //             </MenuItem>
+  //           </TextField>
+  //           <TextField
+  //             style={{ margin: "20px" }}
+  //             name='search'
+  //             lable='Search Jobs'
+  //             value={this.state.search}
+  //             onChange={this.handleChange}
+  //             autoComplete='off'
+  //           ></TextField>
+  //           {this.displayFilters()}
+  //           {this.displayJobs()}
+  //           <Dialog
+  //             open={this.state.openDialog}
+  //             onClose={this.handleClose}
+  //             aria-labelledby='form-dialog-title'
+  //           >
+  //             <DialogTitle id='form-dialog-title'>
+  //               Statement of Purpose
+  //             </DialogTitle>
+  //             <DialogContent>
+  //               <TextField
+  //                 style={{ minWidth: 500 }}
+  //                 autoFocus
+  //                 rows={3}
+  //                 rowsMax={6}
+  //                 required
+  //                 margin='dense'
+  //                 id='sop'
+  //                 label='max 250 words'
+  //                 type='text'
+  //                 inputProps={{ maxLength: 250 }}
+  //                 multiline
+  //                 variant='outlined'
+  //                 fullWidth
+  //               />
+  //             </DialogContent>
+  //             <DialogActions>
+  //               <Button onClick={() => this.handleClose()} color='primary'>
+  //                 Cancel
+  //               </Button>
+  //               <Button onClick={() => this.sendApplication()} color='primary'>
+  //                 Add
+  //               </Button>
+  //             </DialogActions>
+  //           </Dialog>
+  //         </Paper>
+  //       </Container>
+  //     );
+  // }
   render() {
-    if (this.state.jobs.length === 0) return <h1>Loading...</h1>;
+    if (this.state.jobs.length === 0)
+      return <h1 style={classes.heading}>Loading...</h1>;
     else
       return (
-        <div style={{ margin: 100 }}>
-          <h1>View Jobs</h1>
-          <TextField
-            style={{ margin: "20px" }}
-            name='sortChoice'
-            select
-            label='Sort By'
-            value={this.state.sortChoice}
-            onChange={this.handleChange}
-          >
-            <MenuItem key='salary' value='salary'>
-              Salary
-            </MenuItem>
-            <MenuItem key='rating' value='rating'>
-              Rating
-            </MenuItem>
-            <MenuItem key='duration' value='duration'>
-              Duration
-            </MenuItem>
-          </TextField>
-          <TextField
-            name='order'
-            select
-            label='Order'
-            value={this.state.order}
-            onChange={this.handleChange}
-          >
-            <MenuItem key='ascending' value='1'>
-              Ascending
-            </MenuItem>
-            <MenuItem key='descending' value='-1'>
-              Descending
-            </MenuItem>
-          </TextField>
-          <TextField
-            style={{ margin: "20px" }}
-            name='search'
-            lable='Search Jobs'
-            value={this.state.search}
-            onChange={this.handleChange}
-            autoComplete='off'
-          ></TextField>
-          {this.displayFilters()}
-          {this.displayJobs()}
-          <Dialog
-            open={this.state.openDialog}
-            onClose={this.handleClose}
-            aria-labelledby='form-dialog-title'
-          >
-            <DialogTitle id='form-dialog-title'>
-              Statement of Purpose
-            </DialogTitle>
-            <DialogContent>
-              <TextField
-                style={{ minWidth: 500 }}
-                autoFocus
-                rows={3}
-                rowsMax={6}
-                required
-                margin='dense'
-                id='sop'
-                label='max 250 words'
-                type='text'
-                inputProps={{ maxLength: 250 }}
-                multiline
-                variant='outlined'
-                fullWidth
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => this.handleClose()} color='primary'>
-                Cancel
-              </Button>
-              <Button onClick={() => this.sendApplication()} color='primary'>
-                Add
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </div>
+        <Container>
+          <h1 style={classes.heading}>View Jobs</h1>
+          <Grid container spacing={3} justify='flex-end'>
+            <Grid item xs={3}>
+              <Paper elevation={3} style={{ padding: "2rem 1rem" }}>
+                <div style={classes.sfheading}>Sort and Filter</div>
+                <Grid
+                  container
+                  direction='column'
+                  justify='center'
+                  alignItems='center'
+                >
+                  <Grid container direction='column' style={{ width: "80%" }}>
+                    <Grid item style={classes.field}>
+                      <TextField
+                        fullWidth
+                        name='sortChoice'
+                        select
+                        label='Sort By'
+                        value={this.state.sortChoice}
+                        onChange={this.handleChange}
+                      >
+                        <MenuItem key='salary' value='salary'>
+                          Salary
+                        </MenuItem>
+                        <MenuItem key='rating' value='rating'>
+                          Rating
+                        </MenuItem>
+                        <MenuItem key='duration' value='duration'>
+                          Duration
+                        </MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item style={classes.field}>
+                      <TextField
+                        fullWidth
+                        name='order'
+                        select
+                        label='Order'
+                        value={this.state.order}
+                        onChange={this.handleChange}
+                      >
+                        <MenuItem key='ascending' value='1'>
+                          Ascending
+                        </MenuItem>
+                        <MenuItem key='descending' value='-1'>
+                          Descending
+                        </MenuItem>
+                      </TextField>
+                    </Grid>
+                    {this.displayFilters()}
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+            <Grid item xs={9}>
+              <Grid container>
+                <Paper elevation={3} style={{ padding: "2rem 1rem" }}>
+                  <TextField
+                    fullWidth
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position='start'>
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                    name='search'
+                    lable='Search Jobs'
+                    value={this.state.search}
+                    onChange={this.handleChange}
+                    autoComplete='off'
+                  ></TextField>
+                  {this.displayJobs()}
+                </Paper>
+              </Grid>
+            </Grid>
+          </Grid>
+        </Container>
       );
   }
 }
