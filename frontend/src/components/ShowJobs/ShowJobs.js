@@ -167,7 +167,13 @@ class ShowJobs extends React.Component {
           });
           if (status === "Accepted") {
             this.props.job.gotBy.push(this.state.applicants[index].userId);
-            if (this.state.leftPositions === 1) this.rejectLeft();
+            if (this.state.leftPositions === 1) {
+              this.rejectLeft();
+              swal({
+                title: "All Positions Filled",
+                icon: "success",
+              });
+            }
             this.setState((prevValues) => ({
               leftPositions: prevValues.leftPositions - 1,
             }));

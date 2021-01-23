@@ -49,7 +49,7 @@ const NavBar = () => {
         <div className={classes.title}>
           <Link to={`/`} style={{ textDecoration: "none", color: "white" }}>
             <Typography variant='h6' className={classes.logo}>
-              Job Dekho
+              JOB DEKHO
             </Typography>
           </Link>
         </div>

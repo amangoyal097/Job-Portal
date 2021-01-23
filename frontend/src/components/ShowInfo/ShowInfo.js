@@ -226,6 +226,7 @@ const ShowInfo = (props) => {
     if (filename === "") {
       swal({
         title: "No File Uploaded",
+        icon: "error",
       });
       return;
     }

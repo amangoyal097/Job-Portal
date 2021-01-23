@@ -38,7 +38,7 @@ const NavBar = (props) => {
       <Toolbar className={classes.color}>
         <div className={classes.title}>
           <Typography variant='h6' className={classes.logo}>
-            Job Dekho
+            JOB DEKHO
           </Typography>
         </div>
         <div
