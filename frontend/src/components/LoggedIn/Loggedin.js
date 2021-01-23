@@ -31,7 +31,7 @@ const StyledTab = withStyles((theme) => ({
   root: {
     textTransform: "none",
     fontWeight: theme.typography.fontWeightRegular,
-    fontSize: theme.typography.pxToRem(15),
+    fontSize: theme.typography.pxToRem(20),
     marginRight: theme.spacing(1),
     "&:focus": {
       opacity: 1,
@@ -53,6 +53,7 @@ class LoggedIn extends React.Component {
     this.addJobToInfo = this.addJobToInfo.bind(this);
     this.showJob = this.showJob.bind(this);
     this.updateUserInfo = this.updateUserInfo.bind(this);
+    this.backToListed = this.backToListed.bind(this);
   }
 
   componentDidMount() {
@@ -102,6 +103,7 @@ class LoggedIn extends React.Component {
       });
   }
   redirectTo(event, value) {
+    if (value === "showJobs") return;
     if (value === "logout") this.logout();
     else this.setState({ tabOpen: value });
   }
@@ -139,6 +141,10 @@ class LoggedIn extends React.Component {
     this.setState({ viewJob: job, tabOpen: "showJobs" });
   }
 
+  backToListed() {
+    this.setState({ tabOpen: "listedJobs" });
+  }
+
   render() {
     if (
       Object.entries(this.state.currUser).length === 0 ||
@@ -157,11 +163,13 @@ class LoggedIn extends React.Component {
       );
     else {
       return (
-        <div style={{ background: "#f1f3f6" }}>
+        <div style={{ minHeight: "100vh", background: "#f1f3f6" }}>
           <NavBar userInfo={this.state.currUser} logout={this.logout} />
           {this.state.currUser.type === "JA"
             ? this.TopBarJobApplicant()
-            : this.TopBarRecruiter()}
+            : this.state.tabOpen !== "showJobs"
+            ? this.TopBarRecruiter()
+            : null}
           {this.state.tabOpen === "profile" ? (
             this.state.currUser.type === "JA" ? (
               <ShowInfoJobApplicant
@@ -203,7 +211,11 @@ class LoggedIn extends React.Component {
               history={this.props.history}
             />
           ) : this.state.tabOpen === "showJobs" ? (
-            <ShowJobs job={this.state.viewJob} history={this.props.history} />
+            <ShowJobs
+              job={this.state.viewJob}
+              history={this.props.history}
+              back={this.backToListed}
+            />
           ) : this.state.tabOpen === "accApplicants" ? (
             <AccApplicants
               jobs={this.state.currUserInfo.listedJobs}

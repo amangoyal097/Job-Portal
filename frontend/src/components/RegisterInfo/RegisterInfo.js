@@ -46,7 +46,7 @@ const useStyles = makeStyles((theme) => ({
     width: "90%",
   },
   label: {
-    fontFamily: "Roboto",
+    fontFamily: "'Baloo Thambi 2'",
     fontSize: "1rem",
     color: "#2948ff",
   },
@@ -106,8 +106,6 @@ const RegisterInfo = (props) => {
         startYear: new Date(Date.now()).getFullYear(),
         endYear: 0,
       });
-    } else {
-      alert("Already Present");
     }
     handleEduClose();
   }
@@ -132,8 +130,6 @@ const RegisterInfo = (props) => {
           skills: [...prevValues.skills, { skillName: name }],
         };
       });
-    } else {
-      alert("Already Present ");
     }
     handleSkillClose();
   };
@@ -159,9 +155,12 @@ const RegisterInfo = (props) => {
     const emailRegExp = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     let validEmail = emailRegExp.test(String(userInfo.email).toLowerCase());
     const contactRegExp = /^[0-9]+$/;
-    let validContact = userInfo.contactNo.length === 10;
-    validContact =
-      contactRegExp.test(String(userInfo.contactNo)) && validContact;
+    let validContact = true;
+    if (profileInfo.type === "R") {
+      validContact = userInfo.contactNo.length === 10;
+      validContact =
+        contactRegExp.test(String(userInfo.contactNo)) && validContact;
+    }
     setErrFiedls({
       name: nameEmpty,
       email: !validEmail,

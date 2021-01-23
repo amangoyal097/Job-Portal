@@ -41,7 +41,6 @@ passport.use(
       User.countDocuments({ googleId: profile.id }, function (err, count) {
         if (count === 0 && localStorage.getItem("type") === "") {
           let error = new Error("No record found");
-          console.log("sdklfjl");
           cb(err);
         } else {
           User.findOrCreate(
@@ -380,6 +379,16 @@ app.post("/deleteJob", async (req, res) => {
           }
         );
       });
+      const gotUsers = req.body.job.gotBy;
+      await gotUsers.forEach((id) => {
+        JobApplicant.updateMany(
+          { userId: id },
+          { $set: { foundJob: false } },
+          function (err, user) {
+            if (err) console.log(err);
+          }
+        );
+      });
       await Recruiter.findOneAndUpdate(
         { listedJobs: jobId },
         { $pull: { listedJobs: jobId } },
@@ -425,7 +434,6 @@ const sendEmail = (userEmail, jobTitle) => {
       pass: "dassassignment1",
     },
   });
-  console.log(userEmail);
 
   var mailOptions = {
     from: "dass.sample.email@gmail.com",
@@ -438,7 +446,7 @@ const sendEmail = (userEmail, jobTitle) => {
     if (error) {
       console.log(error);
     } else {
-      console.log("Email sent: " + info.response);
+      console.log("Email sent");
     }
   });
 };
@@ -557,7 +565,7 @@ app.post("/updateJobRating", async (req, res) => {
     const { jobId, userId, rating } = req.body;
     let job = await Job.findById(jobId);
     let newApplications = job.appliedBy.map((application) => {
-      application.rating = rating;
+      if (application.id === userId) application.rating = rating;
 
       return application;
     });

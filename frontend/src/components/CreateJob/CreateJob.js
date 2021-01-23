@@ -9,7 +9,14 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  Chip,
+  RadioGroup,
+  Radio,
+  FormControlLabel,
   DialogActions,
+  Grid,
+  Paper,
+  Container,
 } from "@material-ui/core";
 import DateFnsUtils from "@date-io/date-fns";
 import { makeStyles } from "@material-ui/core/styles";
@@ -17,6 +24,17 @@ import {
   MuiPickersUtilsProvider,
   KeyboardDateTimePicker,
 } from "@material-ui/pickers";
+const useStyles = makeStyles((theme) => ({
+  heading: {
+    fontSize: "3rem",
+    fontFamily: "'Work Sans', sans-serif",
+    // fontWeight: 400,
+    color: "#002147",
+  },
+  field: {
+    display: "inline",
+  },
+}));
 
 const CreateJob = (props) => {
   const initializeJob = {
@@ -28,7 +46,7 @@ const CreateJob = (props) => {
     postingDate: Date.now(),
     deadlineDate: Date.now(),
     reqSkills: [],
-    jobType: "",
+    jobType: "Full Time",
     duration: 0,
     salary: 0,
     rating: 0,
@@ -40,16 +58,21 @@ const CreateJob = (props) => {
   const [chosenSkill, setChosenSkill] = useState("");
   const [skillOpen, setSkillOpen] = useState(false);
   const [skillInfo, setSkillInfo] = useState("");
-
-  const useStyles = makeStyles((theme) => ({
-    button: {
-      marginTop: "20px",
-    },
-  }));
+  const [errFields, setErrFields] = useState({
+    title: false,
+    name: false,
+    email: false,
+    maxApp: false,
+    numPos: false,
+    salary: false,
+  });
   const classes = useStyles();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+    if (name === "maxApp" || name === "numPos" || name === "salary") {
+      if (value < 0 && value !== "") return;
+    }
 
     setJobInfo((prevValues) => {
       return {
@@ -67,6 +90,32 @@ const CreateJob = (props) => {
   }
 
   const addJob = () => {
+    let nameEmpty = jobInfo.recruiterName === "";
+    let titleEmpty = jobInfo.title === "";
+    let validApp = jobInfo.numPos <= jobInfo.maxApp;
+    let validPos = jobInfo.numPos > 0;
+    let validSalary = jobInfo.salary >= 0;
+    const emailRegExp = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    let validEmail = emailRegExp.test(
+      String(jobInfo.recruiterEmail).toLowerCase()
+    );
+    setErrFields({
+      name: nameEmpty,
+      title: titleEmpty,
+      email: !validEmail,
+      maxApp: !validApp,
+      numPos: !validPos,
+      salary: !validSalary,
+    });
+    if (
+      nameEmpty ||
+      !validEmail ||
+      titleEmpty ||
+      !validPos ||
+      !validApp ||
+      !validSalary
+    )
+      return;
     axios.defaults.withCredentials = true;
     axios
       .post("http://localhost:8080/addJob", {
@@ -115,8 +164,6 @@ const CreateJob = (props) => {
           reqSkills: [...prevValues.reqSkills, { skillName: name }],
         };
       });
-    } else {
-      alert("Already Present ");
     }
     handleSkillClose();
   };
@@ -125,33 +172,40 @@ const CreateJob = (props) => {
     const Languages = ["C++", "Java", "Python", "Ruby", "JavaScript"];
     return (
       <div>
-        <TextField
-          select
-          label='Choose Skill'
-          value={chosenSkill}
-          style={{ margin: 20, width: 200 }}
-          onChange={(e) => {
-            setChosenSkill(e.target.value);
-            addSkill(e.target.value);
-          }}
-        >
-          {Languages.map((name, index) => {
-            return (
-              <MenuItem key={index} value={name}>
-                {name}
-              </MenuItem>
-            );
-          })}
-        </TextField>
-        <Button
-          variant='contained'
-          color='primary'
-          className={classes.button}
-          startIcon={<AddIcon />}
-          onClick={handleSkillOpen}
-        >
-          Add Skill
-        </Button>
+        <Grid container direction='row' alignItems='flex-end'>
+          <Grid item xs={6}>
+            <TextField
+              select
+              label='Choose Skill'
+              value={chosenSkill}
+              style={{ margin: 0, width: "100%" }}
+              onChange={(e) => {
+                setChosenSkill(e.target.value);
+                addSkill(e.target.value);
+              }}
+            >
+              {Languages.map((name, index) => {
+                return (
+                  <MenuItem key={index} value={name}>
+                    {name}
+                  </MenuItem>
+                );
+              })}
+            </TextField>
+          </Grid>
+          <Grid item xs={6} align='center' style={{ height: "100%" }}>
+            <Button
+              variant='contained'
+              color='primary'
+              style={{ width: "80%" }}
+              className={classes.skillbutton}
+              startIcon={<AddIcon />}
+              onClick={handleSkillOpen}
+            >
+              Add Skill
+            </Button>
+          </Grid>
+        </Grid>
         <Dialog
           open={skillOpen}
           onClose={handleSkillClose}
@@ -184,18 +238,31 @@ const CreateJob = (props) => {
   };
 
   const displaySkills = () => {
-    return jobInfo.reqSkills.map((skill, index) => {
-      return (
-        <ShowSkills
-          data={skill.skillName}
-          key={index}
-          deleteSkill={deleteSkill}
-        />
-      );
-    });
+    return (
+      <div style={{ margin: "1rem 0rem 1rem 0rem" }}>
+        {jobInfo.reqSkills.length === 0 ? (
+          <Chip
+            label='No Skills Added'
+            clickable
+            color='primary'
+            style={{ fontSize: 15, margin: "0.3rem", padding: "0.5rem" }}
+          />
+        ) : (
+          jobInfo.reqSkills.map((skill, index) => {
+            return (
+              <ShowSkills
+                data={skill.skillName}
+                key={index}
+                deleteSkill={deleteSkill}
+              />
+            );
+          })
+        )}
+      </div>
+    );
   };
 
-  const displayJobTypeAndDuration = () => {
+  const displayJobTypeAndDuration = (element) => {
     let durationChoices = [];
     let jobTypes = ["Full Time", "Part Time", "Work from Home"];
     let jobTypesChoices = [];
@@ -208,100 +275,372 @@ const CreateJob = (props) => {
     }
     for (i = 0; i < jobTypes.length; i++) {
       jobTypesChoices.push(
-        <MenuItem key={i} value={jobTypes[i]}>
-          {jobTypes[i]}
-        </MenuItem>
+        <FormControlLabel
+          key={i}
+          value={jobTypes[i]}
+          control={<Radio color='primary' />}
+          label={<span style={{ fontSize: "1rem" }}>{jobTypes[i]}</span>}
+        />
       );
     }
-    return (
-      <div>
-        <TextField
-          style={{ margin: "20px" }}
-          name='duration'
-          select
-          label='Duration'
-          value={jobInfo.duration}
-          onChange={handleChange}
-        >
-          {durationChoices}
-        </TextField>
-        <TextField
-          style={{ margin: "20px", width: 150 }}
+    if (element === "duration")
+      return (
+        <div>
+          <TextField
+            name='duration'
+            select
+            fullWidth
+            label={
+              <span
+                style={{
+                  fontSize: "1.2rem",
+                  color: "#2874ef",
+                  fontFamily: "'Work Sans'",
+                  fontWeight: "bold",
+                }}
+              >
+                Duration
+              </span>
+            }
+            value={jobInfo.duration}
+            onChange={handleChange}
+          >
+            {durationChoices}
+          </TextField>
+        </div>
+      );
+    else
+      return (
+        <RadioGroup
+          row
+          style={{ justifyContent: "center", paddingTop: "2rem" }}
           name='jobType'
-          select
-          label='Type'
           value={jobInfo.jobType}
           onChange={handleChange}
         >
           {jobTypesChoices}
-        </TextField>
-      </div>
-    );
+        </RadioGroup>
+      );
   };
+  // return (
+  //   <div>
+  //     <TextField
+  //       name='title'
+  //       label='Title'
+  //       value={jobInfo.title}
+  //       onChange={handleChange}
+  //     ></TextField>
+  //     <TextField
+  //       name='recruiterName'
+  //       label='Name of Recruiter'
+  //       value={jobInfo.recruiterName}
+  //       onChange={handleChange}
+  //     ></TextField>
+  //     <TextField
+  //       name='recruiterEmail'
+  //       label='Email of Recruiter'
+  //       value={jobInfo.recruiterEmail}
+  //       onChange={handleChange}
+  //     ></TextField>
+  //     <TextField
+  //       name='maxApp'
+  //       label='Maximum Applications'
+  //       value={jobInfo.maxApp}
+  //       onChange={handleChange}
+  //     ></TextField>
+  //     <TextField
+  //       name='numPos'
+  //       label='No. of Vacancies'
+  //       value={jobInfo.numPos}
+  //       onChange={handleChange}
+  //     ></TextField>
+  //     <MuiPickersUtilsProvider utils={DateFnsUtils}>
+  //       <KeyboardDateTimePicker
+  //         label='Deadline Date'
+  //         value={jobInfo.deadlineDate}
+  //         onChange={(date) => {
+  //           setJobInfo((prevValues) => {
+  //             return {
+  //               ...prevValues,
+  //               deadlineDate: date.toISOString(),
+  //             };
+  //           });
+  //         }}
+  //         disablePast
+  //         format='dd/MM/yyyy hh:mm a'
+  //       />
+  //     </MuiPickersUtilsProvider>
 
+  //     <h3>Required Skills</h3>
+  //     {displaySkills()}
+  //     {showSkills()}
+  //     {displayJobTypeAndDuration()}
+  //     <TextField
+  //       name='salary'
+  //       label='Salary Per Month'
+  //       value={jobInfo.salary}
+  //       onChange={handleChange}
+  //     ></TextField>
+  //     <Button variant='contained' color='primary' onClick={addJob}>
+  //       Add Job
+  //     </Button>
+  //   </div>
+  // );
   return (
-    <div>
-      <TextField
-        name='title'
-        label='Title'
-        value={jobInfo.title}
-        onChange={handleChange}
-      ></TextField>
-      <TextField
-        name='recruiterName'
-        label='Name of Recruiter'
-        value={jobInfo.recruiterName}
-        onChange={handleChange}
-      ></TextField>
-      <TextField
-        name='recruiterEmail'
-        label='Email of Recruiter'
-        value={jobInfo.recruiterEmail}
-        onChange={handleChange}
-      ></TextField>
-      <TextField
-        name='maxApp'
-        label='Maximum Applications'
-        value={jobInfo.maxApp}
-        onChange={handleChange}
-      ></TextField>
-      <TextField
-        name='numPos'
-        label='No. of Vacancies'
-        value={jobInfo.numPos}
-        onChange={handleChange}
-      ></TextField>
-      <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <KeyboardDateTimePicker
-          label='Deadline Date'
-          value={jobInfo.deadlineDate}
-          onChange={(date) => {
-            setJobInfo((prevValues) => {
-              return {
-                ...prevValues,
-                deadlineDate: date.toISOString(),
-              };
-            });
-          }}
-          disablePast
-          format='dd/MM/yyyy hh:mm a'
-        />
-      </MuiPickersUtilsProvider>
-
-      <h3>Required Skills</h3>
-      {displaySkills()}
-      {showSkills()}
-      {displayJobTypeAndDuration()}
-      <TextField
-        name='salary'
-        label='Salary Per Month'
-        value={jobInfo.salary}
-        onChange={handleChange}
-      ></TextField>
-      <Button variant='contained' color='primary' onClick={addJob}>
-        Add Job
-      </Button>
-    </div>
+    <Container style={{ width: 1100, maxWidth: "100%" }}>
+      <Grid container spacing={3} justify='center'>
+        <Paper elevation={4} style={{ width: "100%", marginTop: "2rem" }}>
+          <Grid
+            container
+            direction='column'
+            style={{ padding: "0rem 4rem 4rem" }}
+          >
+            <h1 className={classes.heading}>Create Job</h1>
+            <Grid
+              container
+              direction='row'
+              spacing={3}
+              align='center'
+              justify='space-around'
+              style={{ paddingBottom: "3rem" }}
+            >
+              <Grid item xs={5}>
+                <TextField
+                  name='title'
+                  error={errFields.title}
+                  fullWidth
+                  label={
+                    <span
+                      style={{
+                        fontSize: "1.2rem",
+                        color: "#2874ef",
+                        fontFamily: "'Work Sans'",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Title
+                    </span>
+                  }
+                  value={jobInfo.title}
+                  onChange={handleChange}
+                  helperText={errFields.numPos ? "Title can't be empty" : null}
+                ></TextField>
+              </Grid>
+              <Grid item xs={5}>
+                <TextField
+                  name='recruiterName'
+                  error={errFields.name}
+                  fullWidth
+                  label={
+                    <span
+                      style={{
+                        fontSize: "1.2rem",
+                        color: "#2874ef",
+                        fontFamily: "'Work Sans'",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Recruiter Name
+                    </span>
+                  }
+                  value={jobInfo.recruiterName}
+                  onChange={handleChange}
+                  helperText={errFields.numPos ? "Name can't be empty" : null}
+                ></TextField>
+              </Grid>
+            </Grid>
+            <Grid
+              container
+              direction='row'
+              spacing={3}
+              align='center'
+              justify='space-around'
+              style={{ paddingBottom: "3rem" }}
+            >
+              <Grid item xs={5}>
+                <TextField
+                  error={errFields.email}
+                  name='recruiterEmail'
+                  fullWidth
+                  label={
+                    <span
+                      style={{
+                        fontSize: "1.2rem",
+                        color: "#2874ef",
+                        fontFamily: "'Work Sans'",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Recruiter Email
+                    </span>
+                  }
+                  value={jobInfo.recruiterEmail}
+                  onChange={handleChange}
+                  helperText={errFields.email ? "Invalid Email" : null}
+                ></TextField>
+              </Grid>
+              <Grid item xs={5}>
+                <TextField
+                  name='maxApp'
+                  type='number'
+                  error={errFields.maxApp}
+                  fullWidth
+                  label={
+                    <span
+                      style={{
+                        fontSize: "1.2rem",
+                        color: "#2874ef",
+                        fontFamily: "'Work Sans'",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Maximum Applications
+                    </span>
+                  }
+                  value={jobInfo.maxApp}
+                  onChange={handleChange}
+                  helperText={errFields.maxApp ? "Invalid value" : null}
+                ></TextField>
+              </Grid>
+            </Grid>
+            <Grid
+              container
+              direction='row'
+              spacing={3}
+              align='center'
+              justify='space-around'
+              style={{ paddingBottom: "3rem" }}
+            >
+              <Grid item xs={5}>
+                <TextField
+                  name='numPos'
+                  type='number'
+                  error={errFields.numPos}
+                  fullWidth
+                  label={
+                    <span
+                      style={{
+                        fontSize: "1.2rem",
+                        color: "#2874ef",
+                        fontFamily: "'Work Sans'",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      No. of Vacancies
+                    </span>
+                  }
+                  value={jobInfo.numPos}
+                  onChange={handleChange}
+                  helperText={errFields.numPos ? "Invalid value" : null}
+                ></TextField>
+              </Grid>
+              <Grid item xs={5}>
+                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                  <KeyboardDateTimePicker
+                    fullWidth
+                    label={
+                      <span
+                        style={{
+                          fontSize: "1.2rem",
+                          color: "#2874ef",
+                          fontFamily: "'Work Sans'",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Deadline Date
+                      </span>
+                    }
+                    value={jobInfo.deadlineDate}
+                    onChange={(date) => {
+                      setJobInfo((prevValues) => {
+                        return {
+                          ...prevValues,
+                          deadlineDate: date.toISOString(),
+                        };
+                      });
+                    }}
+                    disablePast
+                    format='dd/MM/yyyy hh:mm a'
+                  />
+                </MuiPickersUtilsProvider>
+              </Grid>
+            </Grid>
+            <Grid
+              container
+              direction='row'
+              spacing={3}
+              justify='space-around'
+              style={{ paddingBottom: "3rem" }}
+            >
+              <Grid item xs={5} align='flex-end'>
+                <span
+                  style={{
+                    fontSize: "1.2rem",
+                    color: "#2874ef",
+                    fontFamily: "'Work Sans'",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Skills
+                </span>
+                {displaySkills()}
+                {showSkills()}
+              </Grid>
+              <Grid item xs={5} align='flex-end'>
+                <Grid container direction='column'>
+                  <Grid container direction='row' spacing={3}>
+                    <Grid item xs={6}>
+                      <TextField
+                        error={errFields.salary}
+                        name='salary'
+                        type='number'
+                        InputProps={{ inputProps: { min: 0 } }}
+                        fullWidth
+                        label={
+                          <span
+                            style={{
+                              fontSize: "1.2rem",
+                              color: "#2874ef",
+                              fontFamily: "'Work Sans'",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            Salary per Month
+                          </span>
+                        }
+                        value={jobInfo.salary}
+                        onChange={handleChange}
+                        helperText={
+                          errFields.salary ? "Salary cannot be negative" : null
+                        }
+                      ></TextField>
+                    </Grid>
+                    <Grid item xs={6}>
+                      {displayJobTypeAndDuration("duration")}
+                    </Grid>
+                  </Grid>
+                </Grid>
+                {displayJobTypeAndDuration()}
+              </Grid>
+            </Grid>
+            <Grid item xs={12} align='center'>
+              <Button
+                onClick={addJob}
+                variant='contained'
+                color='secondary'
+                style={{
+                  fontSize: "1.3rem",
+                  maxwidth: "100%",
+                  width: 360,
+                }}
+              >
+                Add Job
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Grid>
+    </Container>
   );
 };
 

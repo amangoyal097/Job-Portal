@@ -1,6 +1,67 @@
 import React from "react";
 import axios from "axios";
-import { Chip, TextField, MenuItem, Button } from "@material-ui/core";
+import {
+  Chip,
+  TextField,
+  MenuItem,
+  Button,
+  Container,
+  Grid,
+  Paper,
+  InputLabel,
+} from "@material-ui/core";
+import { Rating } from "@material-ui/lab";
+import { FcCalendar } from "react-icons/fc";
+
+const classes = {
+  heading: {
+    margin: "0rem",
+    fontSize: "3rem",
+    fontFamily: "'Work Sans', sans-serif",
+    // fontWeight: 400,
+    color: "#002147",
+    paddingLeft: "2rem",
+  },
+  field: {
+    margin: "1rem 0rem",
+  },
+  sfheading: {
+    background: "#2874ef",
+    color: "white",
+    textAlign: "center",
+    fontSize: "1.5rem",
+    padding: "1rem 0rem",
+    marginBottom: "1rem",
+    fontFamily: "'Baloo Thambi 2', cursive",
+  },
+  sliderheading: {
+    fontSize: "0.9rem",
+    fontWeight: 100,
+    margin: "0rem",
+    marginBottom: "0.5rem",
+    marginTop: "0.5rem",
+    color: "#57575f",
+  },
+  salaryRange: {
+    fontSize: "1.4rem",
+    marginTop: "0.3rem",
+    textAlign: "center",
+  },
+  applicantTitle: {
+    display: "inline-block",
+    fontSize: "2rem",
+    fontFamily: "'Rosario', sans-serif",
+    fontWeight: 600,
+  },
+  applicantRating: {
+    display: "inline-block",
+    paddingLeft: "0.4rem",
+    fontSize: "1.3rem",
+    fontWeight: "bold",
+    fontFamily: "'Rosario', sans-serif",
+    color: "green",
+  },
+};
 
 class ShowJobs extends React.Component {
   constructor(props) {
@@ -55,45 +116,7 @@ class ShowJobs extends React.Component {
     });
   }
 
-  displayFilters() {
-    return (
-      <div>
-        <TextField
-          style={{ margin: "20px" }}
-          name='sortChoice'
-          select
-          label='Sort By'
-          value={this.state.sortChoice}
-          onChange={this.handleChange}
-        >
-          <MenuItem key='name' value='name'>
-            Name
-          </MenuItem>
-          <MenuItem key='dateOfApplication' value='rdateOfApplication'>
-            Application Date
-          </MenuItem>
-          <MenuItem key='rating' value='rating'>
-            Rating
-          </MenuItem>
-        </TextField>
-        <TextField
-          name='order'
-          select
-          label='Order'
-          value={this.state.order}
-          onChange={this.handleChange}
-        >
-          <MenuItem key='ascending' value='1'>
-            Ascending
-          </MenuItem>
-          <MenuItem key='descending' value='-1'>
-            Descending
-          </MenuItem>
-        </TextField>
-      </div>
-    );
-  }
-  downloadFile(filename) {
+  downloadFile(filename, file) {
     filename = filename.replace(/ /g, "");
     console.log(filename);
     axios({
@@ -106,7 +129,7 @@ class ShowJobs extends React.Component {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", filename); //or any other extension
+        link.setAttribute("download", file); //or any other extension
         document.body.appendChild(link);
         link.click();
       })
@@ -157,7 +180,10 @@ class ShowJobs extends React.Component {
       });
   }
 
-  displayButtons(index) {
+  displayButtons(userId) {
+    let index = this.state.applicants.findIndex(
+      (applicant) => applicant.userId === userId
+    );
     let appStatus = this.state.applicants[index].status;
     let isShortList = false;
     let isFinal = "";
@@ -165,7 +191,20 @@ class ShowJobs extends React.Component {
     if (appStatus === "Accepted" || appStatus === "Rejected")
       isFinal = appStatus;
     if (isFinal !== "") {
-      return <Button disabled>{isFinal}</Button>;
+      let bgcolor = "#ff0000";
+      if (appStatus === "Accepted") bgcolor = "#4BCA81";
+      return (
+        <Button
+          disabled
+          style={{
+            background: bgcolor,
+            color: "white",
+            padding: "0.5rem 1rem",
+          }}
+        >
+          {isFinal}
+        </Button>
+      );
     } else {
       if (isShortList) {
         return (
@@ -173,13 +212,19 @@ class ShowJobs extends React.Component {
             <Button
               variant='contained'
               color='primary'
+              style={{ padding: "0.5rem 1.5rem" }}
               onClick={() => this.setStatus("ShortListed", index)}
             >
               ShortList
             </Button>
             <Button
               variant='contained'
-              color='secondary'
+              style={{
+                background: "#ff0000",
+                color: "white",
+                marginLeft: "1rem",
+                padding: "0.5rem 1.5rem",
+              }}
               onClick={() => this.setStatus("Rejected", index)}
             >
               Reject
@@ -191,14 +236,23 @@ class ShowJobs extends React.Component {
           <div>
             <Button
               variant='contained'
-              style={{ backgroundColor: "#0bda51", color: "white" }}
+              style={{
+                backgroundColor: "#4BCA81",
+                color: "white",
+                padding: "0.5rem 1.5rem",
+              }}
               onClick={() => this.setStatus("Accepted", index)}
             >
               Accept
             </Button>
             <Button
               variant='contained'
-              color='secondary'
+              style={{
+                background: "#ff0000",
+                color: "white",
+                marginLeft: "1rem",
+                padding: "0.5rem 1.5rem",
+              }}
               onClick={() => this.setStatus("Rejected", index)}
             >
               Reject
@@ -208,7 +262,18 @@ class ShowJobs extends React.Component {
     }
   }
 
+  titleCase(str) {
+    var splitStr = str.toLowerCase().split(" ");
+    for (let i = 0; i < splitStr.length; i++) {
+      splitStr[i] =
+        splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+    }
+    return splitStr.join(" ");
+  }
+
   displayApplicants() {
+    if (this.state.applicants.length === 0)
+      return <h1 style={classes.heading}>No Applications Yet!</h1>;
     return this.state.applicants
       .sort((a, b) => {
         let retValue;
@@ -224,6 +289,10 @@ class ShowJobs extends React.Component {
       .map((applicant, index) => {
         //         Name, Skills, Date of
         // Applica on, Educa on, SOP, Ra ng, Stage of Applica on in view.
+        let statusColor = "#ff0000";
+        if (applicant.status === "Applied") statusColor = "#3f51b4";
+        if (applicant.status === "ShortListed") statusColor = "#f50057";
+        if (applicant.status === "Accepted") statusColor = "#4BCA81";
         var dateFormat = require("dateformat");
         let applicationDate = new Date(applicant.dateOfApplication);
         const formattedApplicationDate = dateFormat(
@@ -231,35 +300,171 @@ class ShowJobs extends React.Component {
           "dddd, mmmm dS, yyyy"
         );
         return (
-          <div key={applicant.userId}>
-            <p>
-              {applicant.name} {formattedApplicationDate} {applicant.rating}{" "}
-              {applicant.status} {applicant.SOP}
-            </p>
-            {applicant.skills.map((skill, index) => (
-              <Chip
-                key={index}
-                label={skill.skillName}
-                clickable
-                color='primary'
-                style={{ width: 100, fontSize: 15 }}
-              />
-            ))}
-            {applicant.education.map((instance, index) => (
-              <span key={index}>
-                {instance.instituteName} {instance.startYear} {instance.endYear}
-              </span>
-            ))}
-            <Button
-              disabled={applicant.resumePath === ""}
-              onClick={() =>
-                this.downloadFile(applicant.userId + applicant.resumePath)
-              }
+          <Grid item xs={12} key={index}>
+            <Grid
+              container
+              style={{
+                width: "100%",
+              }}
             >
-              Download Resume
-            </Button>
-            {this.displayButtons(index)}
-          </div>
+              <Paper
+                elevation={3}
+                style={{
+                  width: "100%",
+                  paddingTop: "1rem",
+                  paddingLeft: "2rem",
+                }}
+              >
+                <Grid
+                  container
+                  style={{
+                    width: "100%",
+                    paddingTop: "1rem",
+                    paddingLeft: "2rem",
+                    paddingBottom: "1rem",
+                  }}
+                >
+                  <Grid item xs={7}>
+                    <Grid
+                      container
+                      direction='column'
+                      style={{
+                        width: "100%",
+                      }}
+                      spacing={1}
+                    >
+                      <Grid
+                        item
+                        xs={10}
+                        style={{
+                          fontFamily: "'Baloo Thambi 2', curisve",
+                          color: statusColor,
+                        }}
+                      >
+                        {applicant.status}
+                      </Grid>
+                      <Grid item xs={10}>
+                        <div style={classes.applicantTitle}>
+                          {this.titleCase(applicant.name)}
+                        </div>{" "}
+                        <div style={classes.applicantRating}>
+                          <Rating
+                            name={applicant.userId}
+                            defaultValue={applicant.rating}
+                            precision={0.5}
+                            readOnly
+                          />
+                        </div>
+                      </Grid>
+                      <Grid item xs={10}>
+                        {applicant.skills.length === 0 ? (
+                          <Chip
+                            key={index}
+                            label='No Skills Given'
+                            clickable
+                            color='primary'
+                            style={{ fontSize: 10 }}
+                          />
+                        ) : (
+                          applicant.skills.map((skill, index) => (
+                            <Chip
+                              key={index}
+                              label={skill.skillName}
+                              clickable
+                              color='primary'
+                              style={{ fontSize: 10 }}
+                            />
+                          ))
+                        )}
+                      </Grid>
+                      <Grid item xs={10}>
+                        <InputLabel
+                          style={{
+                            fontSize: "1rem",
+                            display: "inline",
+                          }}
+                        >
+                          <FcCalendar /> {formattedApplicationDate}
+                        </InputLabel>
+                      </Grid>
+                      <Grid item xs={10}>
+                        <InputLabel
+                          style={{
+                            fontFamily: "'Baloo Thambi 2', curisve",
+                            fontSize: "1.2rem",
+                          }}
+                        >
+                          Education
+                          <ul style={{ margin: "0rem" }}>
+                            {applicant.education.length === 0 ? (
+                              <li>No instance given</li>
+                            ) : (
+                              applicant.education.map((instance, index) => {
+                                let secondPart = "Present";
+                                if (instance.endYear !== 0)
+                                  secondPart = instance.endYear;
+                                return (
+                                  <li key={index}>
+                                    {this.titleCase(instance.instituteName)}{" "}
+                                    {`(${instance.startYear}-${secondPart})`}
+                                  </li>
+                                );
+                              })
+                            )}
+                          </ul>
+                        </InputLabel>
+                      </Grid>
+                      <Grid item xs={9}>
+                        <InputLabel
+                          style={{ display: "inline", fontWeight: "bold" }}
+                        >
+                          SOP: {"   "}
+                        </InputLabel>
+                        <span style={{ fontFamily: "'Work Sans'" }}>
+                          {applicant.SOP}
+                        </span>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                  <Grid item xs={4}>
+                    <Grid
+                      container
+                      alignContent='center'
+                      justify='center'
+                      alignItems='center'
+                      style={{ height: "100%" }}
+                    >
+                      {this.displayButtons(applicant.userId)}
+                      <Button
+                        style={{
+                          margin: "1rem",
+                          padding: "0.7rem",
+                          color: "#1464F4	",
+                          border: "3px  solid #1D7CF2",
+                          borderRadius: 0,
+                          width: 200,
+                          backgroundColor: "#FFF",
+                          maxWdith: "100%",
+                        }}
+                        component='label'
+                        disabled={applicant.resumePath === ""}
+                        onClick={() =>
+                          this.downloadFile(
+                            applicant.userId + applicant.resumePath,
+                            applicant.resumePath
+                          )
+                        }
+                      >
+                        {applicant.resumePath === ""
+                          ? "No Resume"
+                          : "Download Resume"}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+          </Grid>
         );
       });
   }
@@ -277,18 +482,126 @@ class ShowJobs extends React.Component {
   }
 
   render() {
-    if (!this.state.gotResponse) return <h1>Loading..</h1>;
+    if (!this.state.gotResponse)
+      return <h1 style={classes.heading}>Loading..</h1>;
     else
       return (
-        <div>
-          <h2>Positions to Fill: {this.state.leftPositions}</h2>
-          {this.displayFilters()}
-          {this.state.applicants.length === 0 ? (
-            <h1>No Applications!</h1>
-          ) : (
-            this.displayApplicants()
-          )}
-        </div>
+        // <div>
+        //   <h2>Positions to Fill: {this.state.leftPositions}</h2>
+        //   {this.displayFilters()}
+        //   {this.state.applicants.length === 0 ? (
+        //     <h1>No Applications!</h1>
+        //   ) : (
+        //     this.displayApplicants()
+        //   )}
+        // </div>
+        <Container style={{ padding: "2rem" }}>
+          <Button
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 90,
+              background: "transparent",
+              fontSize: "1.2rem",
+            }}
+            onClick={this.props.back}
+            variant='contained'
+          >
+            Back
+          </Button>
+          <h1 style={classes.heading}>Applicants</h1>
+          <Grid
+            container
+            spacing={3}
+            justify='flex-end'
+            style={{ marginTop: "2rem" }}
+          >
+            <Grid item xs={3}>
+              <Paper elevation={3} style={{ padding: "0rem" }}>
+                <div style={classes.sfheading}>Sort and Filter</div>
+
+                <Grid
+                  container
+                  direction='column'
+                  justify='center'
+                  alignItems='center'
+                  style={{ padding: "0rem 1rem" }}
+                >
+                  <Grid
+                    container
+                    direction='column'
+                    style={{ width: "80%", paddingBottom: "2rem" }}
+                  >
+                    <Grid item style={classes.field}>
+                      <TextField
+                        fullWidth
+                        name='sortChoice'
+                        select
+                        label='Sort By'
+                        value={this.state.sortChoice}
+                        onChange={this.handleChange}
+                      >
+                        <MenuItem key='name' value='name'>
+                          Name
+                        </MenuItem>
+                        <MenuItem
+                          key='dateOfApplication'
+                          value='rdateOfApplication'
+                        >
+                          Application Date
+                        </MenuItem>
+                        <MenuItem key='rating' value='rating'>
+                          Rating
+                        </MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item style={classes.field}>
+                      <TextField
+                        fullWidth
+                        name='order'
+                        select
+                        label='Order'
+                        value={this.state.order}
+                        onChange={this.handleChange}
+                      >
+                        <MenuItem key='ascending' value='1'>
+                          Ascending
+                        </MenuItem>
+                        <MenuItem key='descending' value='-1'>
+                          Descending
+                        </MenuItem>
+                      </TextField>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+            <Grid item xs={9}>
+              <Paper
+                elevation={3}
+                style={{
+                  padding: "1rem 1rem",
+                  maxHeight: "70vh",
+                  overflowY: "auto",
+                }}
+              >
+                <h1 style={{ fontFamily: "'Rosario", color: "#002147" }}>
+                  Positions Left: {this.state.leftPositions}
+                </h1>
+                <Grid
+                  container
+                  style={{
+                    paddingTop: "0rem",
+                  }}
+                  direction='column'
+                  spacing={1}
+                >
+                  {this.displayApplicants()}
+                </Grid>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Container>
       );
   }
 }

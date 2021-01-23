@@ -1,7 +1,11 @@
 import React from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
-import SearchIcon from "@material-ui/icons/Search";
+import { withStyles } from "@material-ui/core/styles";
+import SearchBar from "material-ui-search-bar";
+import { Rating } from "@material-ui/lab";
+import { ImStopwatch } from "react-icons/im";
+
 import {
   TextField,
   MenuItem,
@@ -11,13 +15,14 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  InputAdornment,
   Container,
+  InputLabel,
   Paper,
   Grid,
 } from "@material-ui/core";
 const classes = {
   heading: {
+    margin: "1rem 0rem",
     fontSize: "3rem",
     fontFamily: "'Work Sans', sans-serif",
     // fontWeight: 400,
@@ -26,8 +31,73 @@ const classes = {
   field: {
     margin: "1rem 0rem",
   },
-  sfheading: {},
+  sfheading: {
+    background: "#2874ef",
+    color: "white",
+    textAlign: "center",
+    fontSize: "1.5rem",
+    padding: "1rem 0rem",
+    marginBottom: "1rem",
+    fontFamily: "'Baloo Thambi 2', cursive",
+  },
+  sliderheading: {
+    fontSize: "0.9rem",
+    fontWeight: 100,
+    margin: "0rem",
+    marginBottom: "0.5rem",
+    marginTop: "0.5rem",
+    color: "#57575f",
+  },
+  salaryRange: {
+    fontSize: "1.4rem",
+    marginTop: "0.3rem",
+    textAlign: "center",
+  },
+  jobTitle: {
+    display: "inline-block",
+    fontSize: "2rem",
+    fontFamily: "'Rosario', sans-serif",
+    fontWeight: 600,
+  },
+  jobRating: {
+    display: "inline-block",
+    paddingLeft: "0.4rem",
+    fontSize: "1.3rem",
+    fontWeight: "bold",
+    fontFamily: "'Rosario', sans-serif",
+    color: "green",
+  },
 };
+
+const PrettoSlider = withStyles({
+  root: {
+    color: "#2874ef",
+    height: 8,
+  },
+  thumb: {
+    height: 24,
+    width: 24,
+    backgroundColor: "#fff",
+    border: "2px solid currentColor",
+    marginTop: -8,
+    marginLeft: -12,
+    "&:focus, &:hover, &$active": {
+      boxShadow: "inherit",
+    },
+  },
+  active: {},
+  valueLabel: {
+    left: "calc(-50% + 4px)",
+  },
+  track: {
+    height: 8,
+    borderRadius: 4,
+  },
+  rail: {
+    height: 8,
+    borderRadius: 4,
+  },
+})(Slider);
 
 class ViewJobs extends React.Component {
   constructor(props) {
@@ -46,6 +116,7 @@ class ViewJobs extends React.Component {
       filterSalary: [0, 0],
       filterDuration: 7,
       openDialog: false,
+      searchValue: "",
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSlider = this.handleSlider.bind(this);
@@ -97,6 +168,7 @@ class ViewJobs extends React.Component {
       })
       .catch((err) => {
         console.log(err);
+        alert("Failed to Apply");
       });
     if (this._isMounted) this.handleClose();
   }
@@ -191,31 +263,66 @@ class ViewJobs extends React.Component {
           </TextField>
         </Grid>
         <Grid item xs={12} style={classes.field}>
-          <Slider
+          <InputLabel style={classes.sliderheading}>Price</InputLabel>
+          <PrettoSlider
             value={this.state.filterSalary}
             onChange={this.handleSlider}
             min={0}
             max={this.maxSalary}
             step={this.maxSalary / 10}
-            getAriaLabel={(index) => "Slider"}
           />
-          <h1>
-            {this.state.filterSalary[0]}-{this.state.filterSalary[1]}
-          </h1>
+          <Grid container justify='space-between'>
+            <span>₹ {this.state.filterSalary[0]}</span>
+            <span>₹ {this.state.filterSalary[1]}</span>
+          </Grid>
+          {/* <InputLabel style={classes.salaryRange}>
+            Min: {this.state.filterSalary[0]} Max: {this.state.filterSalary[1]}
+          </InputLabel> */}
         </Grid>
       </Grid>
     );
   }
 
   applyToJob(jobId) {
-    if (this.state.currUserInfo.appliedJobs.length === 10) {
-      alert("Max number of applications filled by You");
-    } else {
-      this.setState({
-        openDialog: true,
+    axios.defaults.withCredentials = true;
+    axios
+      .get("http://localhost:8080/isLoggedIn")
+      .then((response) => {
+        if (response.data !== "Yes") {
+          this.props.history.push("/login");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        this.props.history.push("/login");
       });
-      this.applyingToJob = jobId;
-    }
+    axios
+      .get("http://localhost:8080/jobs")
+      .then((response) => {
+        let count = 0;
+        for (let i = 0; i < response.data.jobs.length; i++) {
+          let job = response.data.jobs[i];
+          for (let j = 0; j < job.appliedBy.length; j++) {
+            if (
+              job.appliedBy[j].id === this.props.user._id &&
+              job.appliedBy[j].status !== "Rejected"
+            )
+              count++;
+          }
+        }
+        if (count < 10) {
+          this.setState({
+            openDialog: true,
+          });
+          this.applyingToJob = jobId;
+        } else {
+          alert("Max applications made");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        this.props.history.push("/login");
+      });
   }
 
   canApply(job, jobId) {
@@ -231,7 +338,12 @@ class ViewJobs extends React.Component {
         return (
           <Button
             variant='contained'
-            style={{ backgroundColor: "#3f50b5", color: "white" }}
+            style={{
+              backgroundColor: "#ff0000",
+              color: "white",
+              width: 120,
+              fontSize: "1rem",
+            }}
             disabled
           >
             Full
@@ -240,10 +352,11 @@ class ViewJobs extends React.Component {
       else
         return (
           <Button
-            color='secondary'
+            color='primary'
             id='applyButton'
             variant='contained'
             onClick={() => this.applyToJob(jobId)}
+            style={{ width: 120, fontSize: "1rem" }}
           >
             Apply
           </Button>
@@ -253,12 +366,149 @@ class ViewJobs extends React.Component {
         <Button
           disabled
           variant='contained'
-          style={{ backgroundColor: "#0bda51", color: "white" }}
+          style={{
+            backgroundColor: "#4BCA81",
+            color: "white",
+            width: 120,
+            fontSize: "1rem",
+          }}
         >
           Applied
         </Button>
       );
     }
+  }
+
+  titleCase(str) {
+    var splitStr = str.toLowerCase().split(" ");
+    for (let i = 0; i < splitStr.length; i++) {
+      splitStr[i] =
+        splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+    }
+    return splitStr.join(" ");
+  }
+
+  displayJob(job) {
+    let rating = 0;
+    job.appliedBy.forEach((applicant) => {
+      if (applicant.status === "Accepted") rating += applicant.rating;
+    });
+    if (job.gotBy.length !== 0) rating = rating / job.gotBy.length;
+    let durationString = "Indefinite";
+    if (job.duration === 1) durationString = "1 month";
+    else if (job.duration >= 2) durationString = job.duration + " months";
+    var dateFormat = require("dateformat");
+    let deadlineDate = new Date(job.deadlineDate);
+    const deadlineString = dateFormat(
+      deadlineDate,
+      "dddd, mmmm dS, yyyy, h:MM TT"
+    );
+    return (
+      <Grid
+        key={job._id}
+        container
+        style={{
+          width: "100%",
+          paddingTop: "1rem",
+          paddingLeft: "2rem",
+          paddingRight: "2rem",
+        }}
+      >
+        <Paper
+          style={{ width: "100%", paddingTop: "1rem", paddingLeft: "2rem" }}
+        >
+          <Grid
+            container
+            style={{
+              width: "100%",
+              paddingTop: "1rem",
+              paddingLeft: "2rem",
+              paddingBottom: "1rem",
+            }}
+          >
+            <Grid item xs={9}>
+              <Grid
+                container
+                direction='column'
+                style={{
+                  width: "100%",
+                }}
+              >
+                {" "}
+                <Grid item xs={10}>
+                  <div style={classes.jobTitle}>
+                    {this.titleCase(job.title)}
+                  </div>{" "}
+                  <div style={classes.jobRating}>
+                    <Rating
+                      name='rating'
+                      defaultValue={rating}
+                      precision={0.1}
+                      readOnly
+                    />
+                  </div>
+                </Grid>
+                <Grid item>
+                  <div
+                    style={{
+                      marginLeft: "0.5rem",
+                      marginBottom: "0.5rem",
+                      fontSize: "1.2rem",
+                      fontFamily: "'Rosario', sans-serif",
+                    }}
+                  >
+                    {job.salary === 0 ? "Unpaid" : `₹ ${job.salary} /- month`}
+                  </div>
+                </Grid>
+                <Grid item>
+                  <InputLabel
+                    style={{
+                      marginLeft: "0.5rem",
+                      fontSize: "1rem",
+                      display: "inline",
+                    }}
+                  >
+                    By {this.titleCase(job.recruiterName)},
+                  </InputLabel>
+                  <InputLabel
+                    style={{
+                      display: "inline",
+                      marginLeft: "0.5rem",
+                      fontSize: "1.2rem",
+                      fontFamily: "'Baloo Thambi 2', cursivef",
+                    }}
+                  >
+                    {durationString}
+                  </InputLabel>
+                </Grid>
+                <Grid item style={{ marginTop: "0.5rem" }}>
+                  <InputLabel
+                    style={{
+                      marginLeft: "0.5rem",
+                      fontSize: "1rem",
+                      display: "inline",
+                    }}
+                  >
+                    <ImStopwatch /> {deadlineString}
+                  </InputLabel>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Grid item xs={3}>
+              <Grid
+                container
+                align='center'
+                justify='center'
+                alignItems='center'
+                style={{ height: "100%" }}
+              >
+                {this.canApply(job, job._id)}
+              </Grid>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Grid>
+    );
   }
 
   displayJobs() {
@@ -294,21 +544,7 @@ class ViewJobs extends React.Component {
           : job.jobType === this.state.filterType
       )
       .map((job) => {
-        let rating = 0;
-        job.appliedBy.forEach((applicant) => {
-          if (applicant.status === "Accepted") rating += applicant.rating;
-        });
-        if (job.gotBy.length !== 0) rating = rating / job.gotBy.length;
-        return (
-          <div key={job._id}>
-            <p key={job._id}>
-              title: {job.title} RName: {job.recruiterName} salary: {job.salary}{" "}
-              rating: {rating} duration: {job.duration} deadline:{" "}
-              {job.deadlineDate}
-            </p>
-            {this.canApply(job, job._id)}
-          </div>
-        );
+        return this.displayJob(job);
       });
   }
   handleChange(event) {
@@ -423,13 +659,15 @@ class ViewJobs extends React.Component {
           <h1 style={classes.heading}>View Jobs</h1>
           <Grid container spacing={3} justify='flex-end'>
             <Grid item xs={3}>
-              <Paper elevation={3} style={{ padding: "2rem 1rem" }}>
+              <Paper elevation={3} style={{ padding: "0rem" }}>
                 <div style={classes.sfheading}>Sort and Filter</div>
+
                 <Grid
                   container
                   direction='column'
                   justify='center'
                   alignItems='center'
+                  style={{ padding: "0rem 1rem" }}
                 >
                   <Grid container direction='column' style={{ width: "80%" }}>
                     <Grid item style={classes.field}>
@@ -475,28 +713,73 @@ class ViewJobs extends React.Component {
               </Paper>
             </Grid>
             <Grid item xs={9}>
-              <Grid container>
-                <Paper elevation={3} style={{ padding: "2rem 1rem" }}>
-                  <TextField
-                    fullWidth
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position='start'>
-                          <SearchIcon />
-                        </InputAdornment>
-                      ),
+              <Grid container direction='column'>
+                <Paper elevation={3} style={{ padding: "2rem 0rem" }}>
+                  <Grid item xs={5} style={{ marginLeft: "2rem" }}>
+                    <SearchBar
+                      name='search'
+                      label='Search Jobs'
+                      value={this.state.search}
+                      onChange={(newValue) =>
+                        this.setState({ searchValue: newValue })
+                      }
+                      onCancelSearch={() =>
+                        this.setState({ searchValue: "", search: "" })
+                      }
+                      onRequestSearch={() =>
+                        this.setState({ search: this.state.searchValue })
+                      }
+                    />
+                  </Grid>
+                  <Grid
+                    container
+                    style={{
+                      marginTop: "1rem",
+                      paddingTop: "0rem",
+                      maxHeight: "60vh",
+                      overflowY: "auto",
                     }}
-                    name='search'
-                    lable='Search Jobs'
-                    value={this.state.search}
-                    onChange={this.handleChange}
-                    autoComplete='off'
-                  ></TextField>
-                  {this.displayJobs()}
+                  >
+                    {this.displayJobs()}
+                  </Grid>
                 </Paper>
               </Grid>
             </Grid>
           </Grid>
+          <Dialog
+            open={this.state.openDialog}
+            onClose={this.handleClose}
+            aria-labelledby='form-dialog-title'
+          >
+            <DialogTitle id='form-dialog-title'>
+              Statement of Purpose
+            </DialogTitle>
+            <DialogContent>
+              <TextField
+                style={{ minWidth: 500 }}
+                autoFocus
+                rows={3}
+                rowsMax={6}
+                required
+                margin='dense'
+                id='sop'
+                label='max 250 words'
+                type='text'
+                inputProps={{ maxLength: 250 }}
+                multiline
+                variant='outlined'
+                fullWidth
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => this.handleClose()} color='primary'>
+                Cancel
+              </Button>
+              <Button onClick={() => this.sendApplication()} color='primary'>
+                Add
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Container>
       );
   }

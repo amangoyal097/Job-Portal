@@ -1,6 +1,16 @@
 import React from "react";
 import axios from "axios";
 import Application from "../Application/Application";
+import { Container, Paper, Grid } from "@material-ui/core";
+
+const classes = {
+  heading: {
+    margin: "3rem 0rem",
+    fontSize: "3rem",
+    fontFamily: "'Work Sans', sans-serif",
+    color: "#002147",
+  },
+};
 
 class MyApplications extends React.Component {
   constructor(props) {
@@ -48,11 +58,42 @@ class MyApplications extends React.Component {
     });
   }
   render() {
+    // return (
+    //   <div>
+    //     <h1>My Applications</h1>
+    //     {this.displayApplications()}
+    //   </div>
+    // );
     return (
-      <div>
-        <h1>My Applications</h1>
-        {this.displayApplications()}
-      </div>
+      <Container>
+        <Grid container style={{ marginTop: "2rem" }}>
+          <Paper
+            elevation={2}
+            style={{
+              width: "100%",
+              maxHeight: "75vh",
+              overflowY: "auto",
+              padding: "1rem 0rem 2rem 2rem",
+            }}
+          >
+            <h1 style={classes.heading}>My Applications</h1>
+            {this.state.applications.length === 0 ? (
+              <h1 style={{ fontFamily: "'Baloo Thambi 2'" }}>
+                No Applications Found :(
+              </h1>
+            ) : (
+              <Grid
+                container
+                direction='row'
+                spacing={3}
+                style={{ width: "100%" }}
+              >
+                {this.displayApplications()}
+              </Grid>
+            )}
+          </Paper>
+        </Grid>
+      </Container>
     );
   }
 }
