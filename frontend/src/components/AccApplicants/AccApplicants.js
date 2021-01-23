@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { TextField, MenuItem, Container, Grid, Paper } from "@material-ui/core";
 import Employee from "../Employee/Employee";
+import { FcDocument } from "react-icons/fc";
 
 const classes = {
   heading: {
@@ -107,10 +108,41 @@ const AccApplications = (props) => {
   if (!gotResponse) return <h1 style={classes.heading}>Loading...</h1>;
   else {
     if (employees.length === 0)
-      return <h1 style={classes.heading}>No accepted Applications</h1>;
+      return (
+        <Grid
+          container
+          align='center'
+          justify='center'
+          style={{ marginTop: "5rem", height: "100%" }}
+          alignItems='center'
+        >
+          <Grid item xs={12}>
+            <FcDocument style={{ fontSize: "10rem", display: "block" }} />
+          </Grid>
+          <Grid item xs={12}>
+            <h1
+              style={{
+                fontFamily: "'Baloo Thambi 2'",
+                fontSize: "3.5rem",
+                fontWeight: 100,
+                margin: "0rem",
+              }}
+            >
+              No Accepted Applicants
+            </h1>
+          </Grid>
+        </Grid>
+      );
     else
       return (
-        <Container style={{ padding: "2rem" }}>
+        <Container
+          style={{
+            width: "100vw",
+            padding: 0,
+            maxWidth: 1400,
+            paddingTop: "3rem",
+          }}
+        >
           <h1 style={classes.heading}>Accepted Applicants</h1>
           <Grid
             container
@@ -180,10 +212,11 @@ const AccApplications = (props) => {
             </Grid>
             <Grid item xs={9}>
               <Paper
-                elevation={3}
+                elevation={0}
                 style={{
-                  padding: "1rem 1rem",
-                  maxHeight: "60vh",
+                  background: "transparent",
+                  padding: "0rem 1rem 1rem",
+                  maxHeight: "65vh",
                   overflowY: "auto",
                 }}
               >

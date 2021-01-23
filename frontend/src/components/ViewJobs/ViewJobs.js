@@ -5,7 +5,7 @@ import { withStyles } from "@material-ui/core/styles";
 import SearchBar from "material-ui-search-bar";
 import { Rating } from "@material-ui/lab";
 import { ImStopwatch } from "react-icons/im";
-
+import swal from "sweetalert";
 import {
   TextField,
   MenuItem,
@@ -162,13 +162,19 @@ class ViewJobs extends React.Component {
             currUserInfo: userInfoTemp,
           });
         } else {
-          alert("Failed to Apply");
+          swal({
+            title: response.data,
+            icon: "error",
+          });
           console.log(response.data);
         }
       })
       .catch((err) => {
         console.log(err);
-        alert("Failed to Apply");
+        swal({
+          title: "Failed to Apply",
+          icon: "error",
+        });
       });
     if (this._isMounted) this.handleClose();
   }
@@ -316,7 +322,10 @@ class ViewJobs extends React.Component {
           });
           this.applyingToJob = jobId;
         } else {
-          alert("Max applications made");
+          swal({
+            title: "Applications limit reached",
+            icon: "error",
+          });
         }
       })
       .catch((err) => {
@@ -341,8 +350,9 @@ class ViewJobs extends React.Component {
             style={{
               backgroundColor: "#ff0000",
               color: "white",
+              fontWeight: "bold",
               width: 120,
-              fontSize: "1rem",
+              fontSize: "1.2rem",
             }}
             disabled
           >
@@ -356,7 +366,7 @@ class ViewJobs extends React.Component {
             id='applyButton'
             variant='contained'
             onClick={() => this.applyToJob(jobId)}
-            style={{ width: 120, fontSize: "1rem" }}
+            style={{ fontWeight: "bold", width: 120, fontSize: "1.2rem" }}
           >
             Apply
           </Button>
@@ -369,8 +379,9 @@ class ViewJobs extends React.Component {
           style={{
             backgroundColor: "#4BCA81",
             color: "white",
+            fontWeight: "bold",
             width: 120,
-            fontSize: "1rem",
+            fontSize: "1.2rem",
           }}
         >
           Applied
@@ -415,7 +426,12 @@ class ViewJobs extends React.Component {
         }}
       >
         <Paper
-          style={{ width: "100%", paddingTop: "1rem", paddingLeft: "2rem" }}
+          style={{
+            width: "100%",
+            paddingTop: "1rem",
+            paddingLeft: "2rem",
+            paddingBottom: "1rem",
+          }}
         >
           <Grid
             container
@@ -561,101 +577,12 @@ class ViewJobs extends React.Component {
         filterSalary: newValue,
       });
   }
-
-  // render() {
-  //   if (this.state.jobs.length === 0)
-  //     return <h1 style={classes.heading}>Loading...</h1>;
-  //   else
-  //     return (
-  //       <Container>
-  //         <h1 style={classes.heading}>View Jobs</h1>
-  //         <Paper>
-  //           <TextField
-  //             style={{ margin: "20px" }}
-  //             name='sortChoice'
-  //             select
-  //             label='Sort By'
-  //             value={this.state.sortChoice}
-  //             onChange={this.handleChange}
-  //           >
-  //             <MenuItem key='salary' value='salary'>
-  //               Salary
-  //             </MenuItem>
-  //             <MenuItem key='rating' value='rating'>
-  //               Rating
-  //             </MenuItem>
-  //             <MenuItem key='duration' value='duration'>
-  //               Duration
-  //             </MenuItem>
-  //           </TextField>
-  //           <TextField
-  //             name='order'
-  //             select
-  //             label='Order'
-  //             value={this.state.order}
-  //             onChange={this.handleChange}
-  //           >
-  //             <MenuItem key='ascending' value='1'>
-  //               Ascending
-  //             </MenuItem>
-  //             <MenuItem key='descending' value='-1'>
-  //               Descending
-  //             </MenuItem>
-  //           </TextField>
-  //           <TextField
-  //             style={{ margin: "20px" }}
-  //             name='search'
-  //             lable='Search Jobs'
-  //             value={this.state.search}
-  //             onChange={this.handleChange}
-  //             autoComplete='off'
-  //           ></TextField>
-  //           {this.displayFilters()}
-  //           {this.displayJobs()}
-  //           <Dialog
-  //             open={this.state.openDialog}
-  //             onClose={this.handleClose}
-  //             aria-labelledby='form-dialog-title'
-  //           >
-  //             <DialogTitle id='form-dialog-title'>
-  //               Statement of Purpose
-  //             </DialogTitle>
-  //             <DialogContent>
-  //               <TextField
-  //                 style={{ minWidth: 500 }}
-  //                 autoFocus
-  //                 rows={3}
-  //                 rowsMax={6}
-  //                 required
-  //                 margin='dense'
-  //                 id='sop'
-  //                 label='max 250 words'
-  //                 type='text'
-  //                 inputProps={{ maxLength: 250 }}
-  //                 multiline
-  //                 variant='outlined'
-  //                 fullWidth
-  //               />
-  //             </DialogContent>
-  //             <DialogActions>
-  //               <Button onClick={() => this.handleClose()} color='primary'>
-  //                 Cancel
-  //               </Button>
-  //               <Button onClick={() => this.sendApplication()} color='primary'>
-  //                 Add
-  //               </Button>
-  //             </DialogActions>
-  //           </Dialog>
-  //         </Paper>
-  //       </Container>
-  //     );
-  // }
   render() {
     if (this.state.jobs.length === 0)
       return <h1 style={classes.heading}>Loading...</h1>;
     else
       return (
-        <Container>
+        <Container style={{ width: "100vw", padding: 0, maxWidth: 1400 }}>
           <h1 style={classes.heading}>View Jobs</h1>
           <Grid container spacing={3} justify='flex-end'>
             <Grid item xs={3}>
@@ -714,7 +641,13 @@ class ViewJobs extends React.Component {
             </Grid>
             <Grid item xs={9}>
               <Grid container direction='column'>
-                <Paper elevation={3} style={{ padding: "2rem 0rem" }}>
+                <Paper
+                  elevation={0}
+                  style={{
+                    padding: "0rem 0rem 2rem",
+                    background: "transparent",
+                  }}
+                >
                   <Grid item xs={5} style={{ marginLeft: "2rem" }}>
                     <SearchBar
                       name='search'
@@ -752,7 +685,9 @@ class ViewJobs extends React.Component {
             aria-labelledby='form-dialog-title'
           >
             <DialogTitle id='form-dialog-title'>
-              Statement of Purpose
+              <span style={{ fontSize: "1.5rem", fontFamily: "'Rosario'" }}>
+                Statement of Purpose
+              </span>
             </DialogTitle>
             <DialogContent>
               <TextField

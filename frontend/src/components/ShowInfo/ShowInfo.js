@@ -2,6 +2,7 @@ import { Rating } from "@material-ui/lab";
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { Redirect } from "react-router-dom";
+import swal from "sweetalert";
 import AddIcon from "@material-ui/icons/Add";
 import DateFnsUtils from "@date-io/date-fns";
 import { DatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
@@ -164,14 +165,23 @@ const ShowInfo = (props) => {
       filType !== "image/jpeg" &&
       filType !== "image/png"
     ) {
-      alert("Only jpeg and png image allowed");
+      swal({
+        title: "Only JPEG and PNG images allowed",
+        icon: "error",
+      });
       return;
     } else if (type === "resume" && filType !== "application/pdf") {
-      alert("Only pdf allowerd");
+      swal({
+        title: "Only PDF allowed",
+        icon: "error",
+      });
       return;
     }
     if (event.target.files.length > 1) {
-      alert("Only one file allowed");
+      swal({
+        title: "Only one file allowed",
+        icon: "error",
+      });
       return;
     }
     if (type === "Image")
@@ -191,13 +201,19 @@ const ShowInfo = (props) => {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((response) => {
-        alert(type + "Uploaded");
+        swal({
+          title: "Uploaded successfully",
+          icon: "success",
+        });
         const url = window.URL.createObjectURL(event.target.files[0]);
         if (type === "Image") document.querySelector("#profilePic").src = url;
         console.log(userInfo.resumePath);
       })
       .catch((err) => {
-        alert("Couldn't upload ");
+        swal({
+          title: "Upload failed",
+          icon: "error",
+        });
         console.log(err);
       });
     // window.location.reload();
@@ -208,7 +224,9 @@ const ShowInfo = (props) => {
     else filename = userInfo.resumePath;
     filename = filename.replace(/ /g, "");
     if (filename === "") {
-      alert("File not Uploaded");
+      swal({
+        title: "No File Uploaded",
+      });
       return;
     }
     console.log(userInfo.resumePath);
@@ -289,12 +307,18 @@ const ShowInfo = (props) => {
         type: props.userType,
       })
       .then((response) => {
-        alert("Updated information");
+        swal({
+          title: "Updated Information",
+          icon: "success",
+        });
         props.updateUserInfo(userInfo);
       })
       .catch((err) => {
         console.log(err);
-        alert("Couldnt update");
+        swal({
+          title: "Update failed",
+          icon: "error",
+        });
       });
   };
   const showSkills = () => {

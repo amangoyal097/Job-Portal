@@ -4,7 +4,7 @@ import NavBar from "../NavBar/NavBar";
 import axios from "axios";
 import { makeStyles } from "@material-ui/core/styles";
 import { FaGoogle } from "react-icons/fa";
-
+import swal from "sweetalert";
 import {
   Box,
   Grid,
@@ -104,15 +104,20 @@ const Register = (props) => {
         if (response.data === "Success") {
           props.history.push("/registerInfo");
         } else {
-          alert("Failed to register");
+          swal({
+            title: "Registration Failed",
+            icon: "error",
+          });
           console.log(response.data);
           props.history.push("/register");
         }
       })
       .catch((err) => {
         console.log(err);
-        alert("Failed to register");
-        console.log(err);
+        swal({
+          title: "Registration Failed",
+          icon: "error",
+        });
         props.history.push("/register");
       });
   }

@@ -4,7 +4,7 @@ import NavBar from "../NavBar/NavBar";
 import axios from "axios";
 import { makeStyles } from "@material-ui/core/styles";
 import { FaGoogle } from "react-icons/fa";
-
+import swal from "sweetalert";
 import { Box, Grid, TextField, Container, Button } from "@material-ui/core/";
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -70,14 +70,20 @@ const Login = (props) => {
         if (response.data === "Success") {
           props.history.push("/user");
         } else {
-          alert("Failed to login");
+          swal({
+            title: "Login Failed!",
+            icon: "error",
+          });
           console.log(response.data);
           props.history.push("/login");
         }
       })
       .catch((err) => {
         console.log(err);
-        alert("Failed to login");
+        swal({
+          title: "Login Failed!",
+          icon: "error",
+        });
         props.history.push("/login");
       });
   }

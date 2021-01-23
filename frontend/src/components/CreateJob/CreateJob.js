@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import AddIcon from "@material-ui/icons/Add";
 import ShowSkills from "../ShowSkills/ShowSkills";
 import axios from "axios";
+import swal from "sweetalert";
 import {
   TextField,
   Button,
@@ -123,14 +124,20 @@ const CreateJob = (props) => {
         id: props.userInfo.id,
       })
       .then((response) => {
-        alert("Job added");
+        swal({
+          title: "Job added",
+          icon: "success",
+        });
         setJobInfo(initializeJob);
         props.addJobToInfo(response.data);
         setChosenSkill("");
       })
       .catch((err) => {
         console.log(err);
-        alert("Failed to add JOB");
+        swal({
+          title: "Failed to add Job",
+          icon: "error",
+        });
         if (err.response.status === 401) props.history.push("/login");
       });
   };

@@ -1,5 +1,7 @@
 import React from "react";
 import axios from "axios";
+import { FcDocument } from "react-icons/fc";
+import swal from "sweetalert";
 import {
   Chip,
   TextField,
@@ -104,7 +106,10 @@ class ShowJobs extends React.Component {
       })
       .catch((err) => {
         console.log(err);
-        alert("Failed to retrieve Applicants");
+        swal({
+          title: "Failed to retrieve Applicants",
+          icon: "error",
+        });
         if (err.response.status === 401) this.props.history.push("/login");
       });
   }
@@ -135,7 +140,10 @@ class ShowJobs extends React.Component {
       })
       .catch((err) => {
         console.log(err);
-        alert("Failed to download");
+        swal({
+          title: "Download Failed",
+          icon: "error",
+        });
         if (err.response.status === 401) this.props.history.push("/login");
       });
   }
@@ -165,7 +173,10 @@ class ShowJobs extends React.Component {
             }));
           }
         } else {
-          alert(response.data);
+          swal({
+            title: response.data,
+            icon: "error",
+          });
           let updatedApplicationsArray = this.state.applicants;
           updatedApplicationsArray[index].status = "Rejected";
           this.setState({
@@ -175,7 +186,10 @@ class ShowJobs extends React.Component {
       })
       .catch((err) => {
         console.log(err);
-        alert("Failed to set status");
+        swal({
+          title: "Failed to set Status",
+          icon: "error",
+        });
         if (err.response.status === 401) this.props.history.push("/login");
       });
   }
@@ -194,16 +208,20 @@ class ShowJobs extends React.Component {
       let bgcolor = "#ff0000";
       if (appStatus === "Accepted") bgcolor = "#4BCA81";
       return (
-        <Button
-          disabled
-          style={{
-            background: bgcolor,
-            color: "white",
-            padding: "0.5rem 1rem",
-          }}
-        >
-          {isFinal}
-        </Button>
+        <div>
+          <Button
+            disabled
+            variant='contained'
+            style={{
+              background: bgcolor,
+              color: "white",
+              padding: "0.5rem 1rem",
+              fontWeight: "bold",
+            }}
+          >
+            {isFinal}
+          </Button>
+        </div>
       );
     } else {
       if (isShortList) {
@@ -272,8 +290,6 @@ class ShowJobs extends React.Component {
   }
 
   displayApplicants() {
-    if (this.state.applicants.length === 0)
-      return <h1 style={classes.heading}>No Applications Yet!</h1>;
     return this.state.applicants
       .sort((a, b) => {
         let retValue;
@@ -304,6 +320,7 @@ class ShowJobs extends React.Component {
             <Grid
               container
               style={{
+                height: "100%",
                 width: "100%",
               }}
             >
@@ -311,8 +328,7 @@ class ShowJobs extends React.Component {
                 elevation={3}
                 style={{
                   width: "100%",
-                  paddingTop: "1rem",
-                  paddingLeft: "2rem",
+                  paddingLeft: "1rem",
                 }}
               >
                 <Grid
@@ -323,8 +339,9 @@ class ShowJobs extends React.Component {
                     paddingLeft: "2rem",
                     paddingBottom: "1rem",
                   }}
+                  justify='space-around'
                 >
-                  <Grid item xs={7}>
+                  <Grid item xs={6}>
                     <Grid
                       container
                       direction='column'
@@ -377,16 +394,7 @@ class ShowJobs extends React.Component {
                           ))
                         )}
                       </Grid>
-                      <Grid item xs={10}>
-                        <InputLabel
-                          style={{
-                            fontSize: "1rem",
-                            display: "inline",
-                          }}
-                        >
-                          <FcCalendar /> {formattedApplicationDate}
-                        </InputLabel>
-                      </Grid>
+
                       <Grid item xs={10}>
                         <InputLabel
                           style={{
@@ -395,16 +403,18 @@ class ShowJobs extends React.Component {
                           }}
                         >
                           Education
-                          <ul style={{ margin: "0rem" }}>
+                          <ul style={{ margin: "0rem", paddingLeft: "1rem" }}>
                             {applicant.education.length === 0 ? (
-                              <li>No instance given</li>
+                              <li style={{ margin: "0.5rem" }}>
+                                No instance given
+                              </li>
                             ) : (
                               applicant.education.map((instance, index) => {
                                 let secondPart = "Present";
                                 if (instance.endYear !== 0)
                                   secondPart = instance.endYear;
                                 return (
-                                  <li key={index}>
+                                  <li key={index} style={{ margin: "0.5rem" }}>
                                     {this.titleCase(instance.instituteName)}{" "}
                                     {`(${instance.startYear}-${secondPart})`}
                                   </li>
@@ -423,6 +433,16 @@ class ShowJobs extends React.Component {
                         <span style={{ fontFamily: "'Work Sans'" }}>
                           {applicant.SOP}
                         </span>
+                      </Grid>
+                      <Grid item xs={10}>
+                        <InputLabel
+                          style={{
+                            fontSize: "1rem",
+                            marginTop: "0.5rem",
+                          }}
+                        >
+                          <FcCalendar /> {formattedApplicationDate}
+                        </InputLabel>
                       </Grid>
                     </Grid>
                   </Grid>
@@ -484,18 +504,57 @@ class ShowJobs extends React.Component {
   render() {
     if (!this.state.gotResponse)
       return <h1 style={classes.heading}>Loading..</h1>;
-    else
+    else if (this.state.applicants.length === 0) {
       return (
-        // <div>
-        //   <h2>Positions to Fill: {this.state.leftPositions}</h2>
-        //   {this.displayFilters()}
-        //   {this.state.applicants.length === 0 ? (
-        //     <h1>No Applications!</h1>
-        //   ) : (
-        //     this.displayApplicants()
-        //   )}
-        // </div>
-        <Container style={{ padding: "2rem" }}>
+        <Container>
+          <Button
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 90,
+              background: "transparent",
+              fontSize: "1.2rem",
+            }}
+            onClick={this.props.back}
+            variant='contained'
+          >
+            Back
+          </Button>
+          <Grid
+            container
+            align='center'
+            justify='center'
+            style={{ marginTop: "5rem", height: "100%" }}
+            alignItems='center'
+          >
+            <Grid item xs={12}>
+              <FcDocument style={{ fontSize: "10rem", display: "block" }} />
+            </Grid>
+            <Grid item xs={12}>
+              <h1
+                style={{
+                  fontFamily: "'Baloo Thambi 2'",
+                  fontSize: "3.5rem",
+                  fontWeight: 100,
+                  margin: "0rem",
+                }}
+              >
+                No Applications Yet
+              </h1>
+            </Grid>
+          </Grid>
+        </Container>
+      );
+    } else
+      return (
+        <Container
+          style={{
+            width: "100vw",
+            padding: 0,
+            maxWidth: 1400,
+            paddingTop: "3rem",
+          }}
+        >
           <Button
             style={{
               position: "absolute",
@@ -578,26 +637,33 @@ class ShowJobs extends React.Component {
             </Grid>
             <Grid item xs={9}>
               <Paper
-                elevation={3}
+                elevation={0}
                 style={{
-                  padding: "1rem 1rem",
-                  maxHeight: "70vh",
-                  overflowY: "auto",
+                  padding: "0rem 1rem",
+                  background: "transparent",
                 }}
               >
-                <h1 style={{ fontFamily: "'Rosario", color: "#002147" }}>
+                <div style={classes.sfheading}>
                   Positions Left: {this.state.leftPositions}
-                </h1>
-                <Grid
-                  container
+                </div>
+                <div
                   style={{
-                    paddingTop: "0rem",
+                    maxHeight: "60vh",
+                    overflowY: "auto",
+                    width: "100%",
                   }}
-                  direction='column'
-                  spacing={1}
                 >
-                  {this.displayApplicants()}
-                </Grid>
+                  <Grid
+                    container
+                    style={{
+                      paddingTop: "0rem",
+                      width: "100%",
+                    }}
+                    spacing={1}
+                  >
+                    {this.displayApplicants()}
+                  </Grid>
+                </div>
               </Paper>
             </Grid>
           </Grid>

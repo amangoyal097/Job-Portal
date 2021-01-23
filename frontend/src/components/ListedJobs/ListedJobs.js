@@ -4,7 +4,9 @@ import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
 import DateFnsUtils from "@date-io/date-fns";
 import { ImStopwatch } from "react-icons/im";
-import { FcCalendar } from "react-icons/fc";
+import { FcCalendar, FcDocument } from "react-icons/fc";
+import swal from "sweetalert";
+import "../../fonts/Fonts.css";
 import {
   MuiPickersUtilsProvider,
   KeyboardDateTimePicker,
@@ -19,6 +21,7 @@ import {
   Container,
   DialogTitle,
   DialogContent,
+  DialogContentText,
   DialogActions,
 } from "@material-ui/core";
 
@@ -77,6 +80,7 @@ class ListedJobs extends React.Component {
     this.state = {
       myJobs: [],
       editOpen: false,
+      deleteOpen: false,
       currJob: {},
       appErr: false,
       posErr: false,
@@ -87,6 +91,7 @@ class ListedJobs extends React.Component {
     this.deleteJob = this.deleteJob.bind(this);
     this.handleEdit = this.handleEdit.bind(this);
     this.handleEditClose = this.handleEditClose.bind(this);
+    this.deleteClose = this.deleteClose.bind(this);
     this.updateJob = this.updateJob.bind(this);
   }
   componentDidMount() {
@@ -124,12 +129,16 @@ class ListedJobs extends React.Component {
     });
   }
 
-  deleteJob(jobGone) {
+  deleteJob() {
+    let jobGone = this.state.currJob;
     axios.defaults.withCredentials = true;
     axios
       .post("http://localhost:8080/deleteJob", { job: jobGone })
       .then((response) => {
-        alert("Job deleted from database");
+        swal({
+          title: "Job deleted from database",
+          icon: "success",
+        });
         const updatedJobs = this.state.myJobs.filter((job) => {
           return job._id !== jobGone._id;
         });
@@ -137,7 +146,10 @@ class ListedJobs extends React.Component {
       })
       .catch((err) => {
         console.log(err);
-        alert("couldn't delete job'");
+        swal({
+          title: "Could not delete Job",
+          icon: "error",
+        });
       });
   }
 
@@ -167,16 +179,25 @@ class ListedJobs extends React.Component {
     axios
       .post("http://localhost:8080/updateJob", { job: this.state.currJob })
       .then((response) => {
-        alert("Updated Job");
+        swal({
+          title: "Updated Job",
+          icon: "success",
+        });
       })
       .catch((err) => {
         console.log(err);
-        alert("Failed to apply to Job");
+        swal({
+          title: "Failed to Apply",
+          icon: "error",
+        });
       });
   }
 
   editJob(job) {
     this.setState({ currJob: job, editOpen: true });
+  }
+  callDelete(job) {
+    this.setState({ currJob: job, deleteOpen: true });
   }
 
   titleCase(str) {
@@ -194,7 +215,6 @@ class ListedJobs extends React.Component {
     const jobs = this.state.myJobs.filter(
       (job) => job.numPos - job.gotBy.length
     );
-    if (jobs.length === 0) this.setState({ myJobs: [] });
     var dateFormat = require("dateformat");
     return jobs.map((job, index) => {
       let postingDate = new Date(job.postingDate);
@@ -336,7 +356,7 @@ class ListedJobs extends React.Component {
                     </Grid>
                     <Grid item>
                       <Button
-                        onClick={() => this.deleteJob(job)}
+                        onClick={() => this.callDelete(job)}
                         variant='contained'
                         style={{
                           color: "white",
@@ -357,6 +377,54 @@ class ListedJobs extends React.Component {
         </Grid>
       );
     });
+  }
+  deleteClose() {
+    this.setState({ deleteOpen: false });
+  }
+  deleteDialog() {
+    return (
+      <Dialog
+        open={this.state.deleteOpen}
+        onClose={this.deleteClose}
+        aria-labelledby='alert-dialog-title'
+        aria-describedby='alert-dialog-description'
+      >
+        <DialogTitle>
+          <span
+            style={{
+              fontWeight: 600,
+              fontFamily: "'Baloo Thambi 2',cursive",
+              fontSize: "1.7rem",
+            }}
+          >
+            Delete Job ?
+          </span>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id='alert-dialog-description'>
+            <span style={{ fontSize: "1.2rem" }}>
+              This job will be permanently deleted from the database and all the
+              accepted applications will be deleted with it
+            </span>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={this.deleteClose} color='primary'>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              this.deleteClose();
+              this.deleteJob();
+            }}
+            color='primary'
+            autoFocus
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
   }
   editDialog() {
     return (
@@ -438,21 +506,47 @@ class ListedJobs extends React.Component {
       return <h1 style={classes.heading}>Loading...</h1>;
     else
       return (
-        <Container style={{ width: "100vw", padding: 0, maxWidth: 1400 }}>
-          <Grid container style={{ marginTop: "2rem" }}>
-            <Paper
-              elevation={0}
-              style={{
-                width: "100%",
-                background: "transparent",
-              }}
+        <Container
+          style={{
+            width: "100vw",
+            padding: 0,
+            maxWidth: 1400,
+          }}
+        >
+          {this.state.myJobs.length === 0 ? (
+            <Grid
+              container
+              align='center'
+              justify='center'
+              style={{ marginTop: "5rem", height: "100%" }}
+              alignItems='center'
             >
-              <h1 style={classes.heading}>Listed Jobs</h1>
-              {this.state.myJobslength === 0 ? (
-                <h1 style={{ fontFamily: "'Baloo Thambi 2'" }}>
-                  No Listed Jobs Found :(
+              <Grid item xs={12}>
+                <FcDocument style={{ fontSize: "10rem", display: "block" }} />
+              </Grid>
+              <Grid item xs={12}>
+                <h1
+                  style={{
+                    fontFamily: "'Baloo Thambi 2'",
+                    fontSize: "3.5rem",
+                    fontWeight: 100,
+                    margin: "0rem",
+                  }}
+                >
+                  No Active Jobs Found :(
                 </h1>
-              ) : (
+              </Grid>
+            </Grid>
+          ) : (
+            <Grid container style={{ marginTop: "0rem" }}>
+              <Paper
+                elevation={0}
+                style={{
+                  width: "100%",
+                  background: "transparent",
+                }}
+              >
+                <h1 style={classes.heading}>Listed Jobs</h1>
                 <Grid
                   container
                   direction='row'
@@ -461,10 +555,11 @@ class ListedJobs extends React.Component {
                 >
                   {this.displayJobs()}
                 </Grid>
-              )}
-            </Paper>
-            {this.editDialog()}
-          </Grid>
+              </Paper>
+              {this.editDialog()}
+              {this.deleteDialog()}
+            </Grid>
+          )}
         </Container>
       );
   }

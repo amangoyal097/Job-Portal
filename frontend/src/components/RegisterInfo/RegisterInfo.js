@@ -3,6 +3,7 @@ import axios from "axios";
 import "../../fonts/Fonts.css";
 import NavBar from "../NavBarSignedIn/NavBar";
 import AddIcon from "@material-ui/icons/Add";
+import swal from "sweetalert";
 import DateFnsUtils from "@date-io/date-fns";
 import { DatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
 import ShowInstance from "../ShowInstance/ShowInstance";
@@ -177,7 +178,10 @@ const RegisterInfo = (props) => {
       .then((response) => props.history.push("/user"))
       .catch((err) => {
         console.log(err);
-        alert("Couldnt update");
+        swal({
+          title: "Update Failed",
+          icon: "error",
+        });
       });
   };
 
@@ -438,11 +442,11 @@ const RegisterInfo = (props) => {
     axios
       .get("http://localhost:8080/logout")
       .then((response) => {
-        this.props.history.push("/");
+        props.history.push("/");
       })
       .catch((err) => {
         console.log(err);
-        this.props.history.push("/");
+        props.history.push("/");
       });
   };
 

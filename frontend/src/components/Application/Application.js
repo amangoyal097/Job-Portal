@@ -125,7 +125,12 @@ const Application = (props) => {
       >
         <Paper
           elevation={3}
-          style={{ width: "100%", paddingTop: "1rem", paddingLeft: "2rem" }}
+          style={{
+            width: "100%",
+            paddingTop: "1.5rem",
+            paddingLeft: "2rem",
+            paddingBottom: "1.5rem",
+          }}
         >
           <Grid
             container

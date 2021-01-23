@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import swal from "sweetalert";
 import {
   Button,
   Container,
@@ -95,12 +96,18 @@ const ShowInfoR = (props) => {
         type: props.userType,
       })
       .then((response) => {
-        alert("Updated information");
+        swal({
+          title: "Updated Information",
+          icon: "success",
+        });
         props.updateUserInfo(userInfo);
       })
       .catch((err) => {
         console.log(err);
-        alert("Couldnt update");
+        swal({
+          title: "Could not update Information",
+          icon: "error",
+        });
       });
   };
   const updateInfo = (event) => {
@@ -121,105 +128,19 @@ const ShowInfoR = (props) => {
     });
   };
 
-  // return (
-  // <div>
-  //   <form autoComplete='off'>
-  //     <TextField
-  //       name='name'
-  //       value={userInfo.name}
-  //       label='Name'
-  //       onChange={(e) => (isEditable.name ? updateInfo(e) : null)}
-  //       InputProps={{
-  //         endAdornment: (
-  //           <InputAdornment position='end'>
-  //             <IconButton onClick={() => updateIsEditable("name")}>
-  //               {isEditable.name ? <DoneIcon /> : <EditIcon />}
-  //             </IconButton>
-  //           </InputAdornment>
-  //         ),
-  //       }}
-  //     ></TextField>
-  //     <br />
-  //     <TextField
-  //       name='email'
-  //       label='Email'
-  //       value={userInfo.email}
-  //       onChange={(e) => (isEditable.email ? updateInfo(e) : null)}
-  //       InputProps={{
-  //         endAdornment: (
-  //           <InputAdornment position='end'>
-  //             <IconButton onClick={() => updateIsEditable("email")}>
-  //               {isEditable.email ? <DoneIcon /> : <EditIcon />}
-  //             </IconButton>
-  //           </InputAdornment>
-  //         ),
-  //       }}
-  //     ></TextField>{" "}
-  //     <br />
-  //     <TextField
-  //       name='contactNo'
-  //       label='Contact Number'
-  //       value={userInfo.contactNo}
-  //       onChange={(e) => (isEditable.contactNo ? updateInfo(e) : null)}
-  //       InputProps={{
-  //         endAdornment: (
-  //           <InputAdornment position='end'>
-  //             <IconButton onClick={() => updateIsEditable("contactNo")}>
-  //               {isEditable.contactNo ? <DoneIcon /> : <EditIcon />}
-  //             </IconButton>
-  //           </InputAdornment>
-  //         ),
-  //       }}
-  //     ></TextField>{" "}
-  //     <br />
-  //     <h3>Bio</h3>
-  //     <TextField
-  //       name='bio'
-  //       style={{ width: 500 }}
-  //       autoFocus
-  //       rows={3}
-  //       rowsMax={6}
-  //       required
-  //       margin='dense'
-  //       id='sop'
-  //       label='max 250 words'
-  //       type='text'
-  //       inputProps={{ maxLength: 250 }}
-  //       multiline
-  //       value={userInfo.bio}
-  //       onChange={(e) => (isEditable.bio ? updateInfo(e) : null)}
-  //       InputProps={{
-  //         endAdornment: (
-  //           <InputAdornment position='end'>
-  //             <IconButton onClick={() => updateIsEditable("bio")}>
-  //               {isEditable.bio ? <DoneIcon /> : <EditIcon />}
-  //             </IconButton>
-  //           </InputAdornment>
-  //         ),
-  //       }}
-  //       variant='outlined'
-  //       fullWidth
-  //     />
-  //     <Button color='primary' onClick={updateFullInfo}>
-  //       Update Information
-  //     </Button>
-  //   </form>
-  // </div>
-  // );
-
   return (
     <Container>
-      <h1 className={classes.heading}>PROFILE</h1>
-      <Grid container spacing={3} justify='center'>
-        <Grid item xs={12}>
+      <Grid container justify='center'>
+        <Grid item xs={10}>
+          <h1 className={classes.heading}>PROFILE</h1>
           <Paper elevation={3} style={{ padding: "2rem 1rem" }}>
             <Grid container>
               <Grid item xs={12}>
-                <Grid container direction='row'>
+                <Grid container direction='row' justify='center'>
                   <Grid item xs={3}>
                     <h1 className={classes.label}>Name</h1>
                   </Grid>
-                  <Grid item xs={8}>
+                  <Grid item xs={7} align='center'>
                     <h1 className={classes.info}>
                       <InputBase
                         error={errFields.name}
@@ -254,11 +175,11 @@ const ShowInfoR = (props) => {
                 </Grid>
               </Grid>
               <Grid item xs={12}>
-                <Grid container direction='row'>
+                <Grid container direction='row' justify='center'>
                   <Grid item xs={3}>
                     <h1 className={classes.label}>Email</h1>
                   </Grid>
-                  <Grid item xs={8}>
+                  <Grid item xs={7}>
                     <h1 className={classes.info}>
                       <InputBase
                         disabled={!isEditable.email}
@@ -290,11 +211,11 @@ const ShowInfoR = (props) => {
                 </Grid>
               </Grid>
               <Grid item xs={12}>
-                <Grid container direction='row'>
+                <Grid container direction='row' justify='center'>
                   <Grid item xs={3}>
                     <h1 className={classes.label}>Contact Number</h1>
                   </Grid>
-                  <Grid item xs={8}>
+                  <Grid item xs={7}>
                     <h1 className={classes.info}>
                       <InputBase
                         disabled={!isEditable.contactNo}
@@ -333,11 +254,11 @@ const ShowInfoR = (props) => {
                 </Grid>
               </Grid>
               <Grid item xs={12}>
-                <Grid container direction='row'>
+                <Grid container direction='row' justify='center'>
                   <Grid item xs={3}>
                     <h1 className={classes.label}>Bio</h1>
                   </Grid>
-                  <Grid item xs={8}>
+                  <Grid item xs={7}>
                     <h1 className={classes.info}>
                       <InputBase
                         disabled={!isEditable.bio}
