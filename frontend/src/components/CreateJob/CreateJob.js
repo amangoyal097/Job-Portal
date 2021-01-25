@@ -93,7 +93,7 @@ const CreateJob = (props) => {
   const addJob = () => {
     let nameEmpty = jobInfo.recruiterName === "";
     let titleEmpty = jobInfo.title === "";
-    let validApp = jobInfo.numPos <= jobInfo.maxApp;
+    let validApp = Number(jobInfo.numPos) <= Number(jobInfo.maxApp);
     let validPos = jobInfo.numPos > 0;
     let validSalary = jobInfo.salary >= 0;
     const emailRegExp = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;

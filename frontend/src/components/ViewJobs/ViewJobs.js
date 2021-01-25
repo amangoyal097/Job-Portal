@@ -5,6 +5,7 @@ import { withStyles } from "@material-ui/core/styles";
 import SearchBar from "material-ui-search-bar";
 import { Rating } from "@material-ui/lab";
 import { ImStopwatch } from "react-icons/im";
+import SearchIcon from "@material-ui/icons/Search";
 import swal from "sweetalert";
 import {
   TextField,
@@ -197,6 +198,13 @@ class ViewJobs extends React.Component {
       .get("http://localhost:8080/jobs")
       .then((response) => {
         for (var i = 0; i < response.data.jobs.length; i++) {
+          let rating = 0;
+          let job = response.data.jobs[i];
+          job.appliedBy.forEach((applicant) => {
+            if (applicant.status === "Accepted") rating += applicant.rating;
+          });
+          if (job.gotBy.length !== 0) rating = rating / job.gotBy.length;
+          response.data.jobs[i].rating = rating;
           this.maxSalary = Math.max(
             this.maxSalary,
             response.data.jobs[i].salary
@@ -400,11 +408,6 @@ class ViewJobs extends React.Component {
   }
 
   displayJob(job) {
-    let rating = 0;
-    job.appliedBy.forEach((applicant) => {
-      if (applicant.status === "Accepted") rating += applicant.rating;
-    });
-    if (job.gotBy.length !== 0) rating = rating / job.gotBy.length;
     let durationString = "Indefinite";
     if (job.duration === 1) durationString = "1 month";
     else if (job.duration >= 2) durationString = job.duration + " months";
@@ -458,7 +461,7 @@ class ViewJobs extends React.Component {
                   <div style={classes.jobRating}>
                     <Rating
                       name='rating'
-                      defaultValue={rating}
+                      defaultValue={job.rating}
                       precision={0.1}
                       readOnly
                     />
@@ -528,6 +531,7 @@ class ViewJobs extends React.Component {
   }
 
   displayJobs() {
+    console.log(this.state.jobs);
     this.state.jobs.sort(
       (a, b) =>
         (a[this.state.sortChoice] - b[this.state.sortChoice]) *
@@ -653,11 +657,13 @@ class ViewJobs extends React.Component {
                       name='search'
                       label='Search Jobs'
                       value={this.state.search}
+                      inputProps={{ autoComplete: "off" }}
+                      closeIcon={<SearchIcon style={{ color: "grey" }} />}
                       onChange={(newValue) =>
                         this.setState({ searchValue: newValue })
                       }
                       onCancelSearch={() =>
-                        this.setState({ searchValue: "", search: "" })
+                        this.setState({ search: this.state.searchValue })
                       }
                       onRequestSearch={() =>
                         this.setState({ search: this.state.searchValue })

@@ -240,7 +240,6 @@ app.post("/register", function (req, res) {
         console.log(err);
         res.send(err);
       } else {
-        console.log(user);
         req.login(user, function (err) {
           if (err) console.log(err);
           else {
