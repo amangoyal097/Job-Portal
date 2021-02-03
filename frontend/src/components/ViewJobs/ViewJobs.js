@@ -324,6 +324,7 @@ class ViewJobs extends React.Component {
               count++;
           }
         }
+        console.log(count);
         if (count < 10) {
           this.setState({
             openDialog: true,
@@ -531,7 +532,6 @@ class ViewJobs extends React.Component {
   }
 
   displayJobs() {
-    console.log(this.state.jobs);
     this.state.jobs.sort(
       (a, b) =>
         (a[this.state.sortChoice] - b[this.state.sortChoice]) *
